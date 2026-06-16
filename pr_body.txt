@@ -1,13 +1,15 @@
 ## Deskripsi
-Mengerjakan task 10: Bulk Input & OCR.
-Menambahkan sub-menu pada form Tambah Paket untuk mendukung input massal (Bulk Input).
+Mengerjakan task 11: Statistik & Laporan.
+Menambahkan tampilan analitik ringkas untuk melacak performa keseluruhan dan fitur manajemen data (Backup/Restore).
 Fitur yang ditambahkan:
-1. **Upload OCR**: Menggunakan `Tesseract.js` untuk mengekstrak teks dari gambar/screenshot resi, kemudian mengambil AWB dan PIN secara otomatis dengan regex. Mendukung multiple file upload & drag and drop.
-2. **Paste Bulk**: Memungkinkan paste tabel Excel secara langsung (tab-separated) ke dalam textarea untuk parse otomatis.
-3. **Review Data**: Sebelum disimpan ke database, data dari OCR atau Paste akan masuk ke tabel Review yang bisa diedit/dikoreksi dan mendukung toggle "Urgent" secara batch.
+1. **Statistik Cards**: Menampilkan total paket, rasio yang sudah diambil (%), jumlah retur, dan paket pending.
+2. **Rata-rata Waktu Pickup**: Menghitung secara otomatis selisih waktu masuk paket ke gerai hingga diambil oleh kurir.
+3. **Distribusi Status (Pie Chart)**: Dibuat menggunakan murni CSS `conic-gradient` tanpa library tambahan.
+4. **Paket per Toko (Bar Chart)**: Menampilkan distribusi paket pada tiap toko dengan visual bar menggunakan CSS.
+5. **Backup & Restore**: Export semua data LocalStorage (Stores, Packages, Trips) ke dalam format `.json` untuk diunduh, serta dukungan import dari file `.json` untuk restore secara utuh.
 
 ## Issue yang Terkait
-Fixes #9
+Fixes #10
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)
