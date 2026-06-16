@@ -1,9 +1,13 @@
 ## Deskripsi
-Mengerjakan task 9: Barcode Generate & Scanner.
-Menambahkan visualisasi barcode Code128 dari nomor AWB di seluruh bagian aplikasi (Dashboard, Detail, Mode Pickup). Selain itu, menyediakan fitur live scanner menggunakan kamera untuk mempermudah saat di lokasi (dengan auto-match AWB dan penanda otomatis "Diambil").
+Mengerjakan task 10: Bulk Input & OCR.
+Menambahkan sub-menu pada form Tambah Paket untuk mendukung input massal (Bulk Input).
+Fitur yang ditambahkan:
+1. **Upload OCR**: Menggunakan `Tesseract.js` untuk mengekstrak teks dari gambar/screenshot resi, kemudian mengambil AWB dan PIN secara otomatis dengan regex. Mendukung multiple file upload & drag and drop.
+2. **Paste Bulk**: Memungkinkan paste tabel Excel secara langsung (tab-separated) ke dalam textarea untuk parse otomatis.
+3. **Review Data**: Sebelum disimpan ke database, data dari OCR atau Paste akan masuk ke tabel Review yang bisa diedit/dikoreksi dan mendukung toggle "Urgent" secara batch.
 
 ## Issue yang Terkait
-Fixes #8
+Fixes #9
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)
