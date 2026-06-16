@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IndoPaket Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="app-header">
+        <h1>IndoPaket Tracker</h1>
+    </header>
+
+    <main id="app-content" class="container">
+        <!-- Content will be dynamically rendered here -->
+        <div id="view-dashboard" class="view active">
+            <h2>Dashboard</h2>
+            <div class="card glassmorphism fadeIn">
+                <p>Welcome to IndoPaket Tracker</p>
+                <button class="btn btn-primary">Primary Button</button>
+            </div>
+        </div>
+        <div id="view-add" class="view" style="display: none;">
+            <h2>Tambah Paket</h2>
+            <div class="card glassmorphism">
+                <div class="form-group">
+                    <label>Resi</label>
+                    <input type="text" placeholder="Masukkan resi">
+                </div>
+            </div>
+        </div>
+        <div id="view-trip" class="view" style="display: none;">
+            <h2>Trip</h2>
+            <div class="card glassmorphism">
+                <p>Trip view content...</p>
+            </div>
+        </div>
+        <div id="view-stats" class="view" style="display: none;">
+            <h2>Statistik</h2>
+            <div class="card glassmorphism">
+                <p>Statistik view content...</p>
+            </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="#dashboard" class="nav-item active" data-target="view-dashboard">
+            <span>Dashboard</span>
+        </a>
+        <a href="#add" class="nav-item" data-target="view-add">
+            <span>Tambah</span>
+        </a>
+        <a href="#trip" class="nav-item" data-target="view-trip">
+            <span>Trip</span>
+        </a>
+        <a href="#stats" class="nav-item" data-target="view-stats">
+            <span>Statistik</span>
+        </a>
+    </nav>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
