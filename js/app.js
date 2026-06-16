@@ -34,15 +34,24 @@ const App = {
         }
 
         // Map hash to view ID
+        let basePath = hash;
+        let queryParams = new URLSearchParams();
+        if (hash.includes('?')) {
+            const parts = hash.split('?');
+            basePath = parts[0];
+            queryParams = new URLSearchParams(parts[1]);
+        }
+
         const viewMap = {
             '#dashboard': 'view-dashboard',
             '#add': 'view-add',
             '#trip': 'view-trip',
             '#stats': 'view-stats',
-            '#stores': 'view-stores'
+            '#stores': 'view-stores',
+            '#package-detail': 'view-package-detail'
         };
 
-        const targetId = viewMap[hash];
+        const targetId = viewMap[basePath];
         if (!targetId) return;
 
         // Hide all views
@@ -60,14 +69,19 @@ const App = {
             targetView.classList.add('active', 'fadeIn');
             
             // Route specific logic
-            if (hash === '#stores' && window.Store) {
+            if (basePath === '#stores' && window.Store) {
                 window.Store.render();
+            } else if (basePath === '#add' && window.Package) {
+                window.Package.renderForm(queryParams.get('edit'));
+            } else if (basePath === '#package-detail' && window.Package) {
+                window.Package.renderDetail(queryParams.get('id'));
             }
         }
 
         // Update nav active state
         document.querySelectorAll('.nav-item').forEach(item => {
-            if (item.getAttribute('href') === hash) {
+            const href = item.getAttribute('href');
+            if (href === basePath || href === hash) {
                 item.classList.add('active');
             } else {
                 item.classList.remove('active');
