@@ -1,8 +1,8 @@
 ## Deskripsi
-Mengerjakan task 3: Implementasi antarmuka untuk mengelola daftar toko Indomaret (CRUD lengkap).
+Mengerjakan task 4: Form input paket dan tampilan detail paket untuk memfasilitasi admin/input role mengelola data.
 
 ## Issue yang Terkait
-Fixes #3
+Fixes #4
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)
