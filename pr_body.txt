@@ -1,15 +1,15 @@
 ## Deskripsi
-Mengerjakan task 11: Statistik & Laporan.
-Menambahkan tampilan analitik ringkas untuk melacak performa keseluruhan dan fitur manajemen data (Backup/Restore).
-Fitur yang ditambahkan:
-1. **Statistik Cards**: Menampilkan total paket, rasio yang sudah diambil (%), jumlah retur, dan paket pending.
-2. **Rata-rata Waktu Pickup**: Menghitung secara otomatis selisih waktu masuk paket ke gerai hingga diambil oleh kurir.
-3. **Distribusi Status (Pie Chart)**: Dibuat menggunakan murni CSS `conic-gradient` tanpa library tambahan.
-4. **Paket per Toko (Bar Chart)**: Menampilkan distribusi paket pada tiap toko dengan visual bar menggunakan CSS.
-5. **Backup & Restore**: Export semua data LocalStorage (Stores, Packages, Trips) ke dalam format `.json` untuk diunduh, serta dukungan import dari file `.json` untuk restore secara utuh.
+Mengerjakan task 12 (Final Task): PWA Setup.
+Mengubah aplikasi IndoPaket Tracker menjadi Progressive Web App (PWA) agar dapat diinstal secara native di perangkat mobile dan tablet (Add to Home Screen) serta memiliki kapabilitas untuk berjalan secara _offline_.
+
+File yang ditambahkan/diubah:
+- `manifest.json`: Mengatur detail meta-data aplikasi (nama, tema gelap `#0f0f1a`, icon).
+- `sw.js`: Service Worker dengan strategi `Cache-First` yang akan me-cache semua file inti (HTML, CSS, JS, Fonts, dan library CDN) sehingga aplikasi tetap bisa dibuka tanpa koneksi internet.
+- `index.html`: Mendaftarkan `manifest.json`, icon, dan meregistrasi Service Worker.
+- `icons/`: Menyiapkan placeholder icon `192x192` dan `512x512` yang siap digunakan (bisa diubah nanti).
 
 ## Issue yang Terkait
-Fixes #10
+Fixes #12
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)
