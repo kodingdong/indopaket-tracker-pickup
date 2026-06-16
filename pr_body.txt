@@ -1,8 +1,8 @@
 ## Deskripsi
-Mengerjakan task 4: Form input paket dan tampilan detail paket untuk memfasilitasi admin/input role mengelola data.
+Mengerjakan task 5: Pembuatan Dashboard utama yang menampilkan paket grouped by toko dengan dukungan filter dan pencarian, serta memberikan warning alert untuk paket urgent.
 
 ## Issue yang Terkait
-Fixes #4
+Fixes #5
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)

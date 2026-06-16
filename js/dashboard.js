@@ -1,0 +1,247 @@
+// js/dashboard.js
+
+const Dashboard = {
+    currentFilter: 'pending',
+    searchQuery: '',
+
+    init: function() {
+        this.render();
+    },
+
+    render: function() {
+        const container = document.getElementById('view-dashboard');
+        if (!container) return;
+
+        // Header & Alert
+        const stats = window.DB.getStats();
+        const urgentPackages = window.DB.getUrgentPackages();
+        const needsAlert = urgentPackages.length > 0;
+
+        let html = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.5rem;">Dashboard</h2>
+                <button class="btn" style="background-color: var(--color-surface-2); color: white; width: auto; padding: 0.5rem 1rem;" onclick="window.location.hash='#stores'">Kelola Toko</button>
+            </div>
+        `;
+
+        if (needsAlert) {
+            html += `
+                <div class="card glassmorphism slideUp" style="background-color: rgba(255, 59, 92, 0.1); border-left: 4px solid var(--color-urgent); margin-bottom: 1rem; padding: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: var(--color-urgent); font-weight: bold;">⚠️ Peringatan:</span>
+                        <span>Ada ${urgentPackages.length} paket yang harus segera diambil (<= 2 hari)!</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Summary Bar
+        html += `
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">${stats.totalPackages}</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-muted);">Total</div>
+                </div>
+                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">${stats.pendingCount}</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-muted);">Pending</div>
+                </div>
+                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem;">
+                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-urgent);">${stats.urgentCount}</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-muted);">Urgent</div>
+                </div>
+            </div>
+        `;
+
+        // Search Bar
+        html += `
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <input type="text" id="dashboard-search" placeholder="Cari Nama / AWB / PIN..." value="${this.searchQuery}" 
+                    style="width: 100%; padding: 0.75rem 1rem; border-radius: 24px; border: 1px solid var(--color-surface-2); background-color: var(--color-bg); color: var(--color-text);">
+            </div>
+        `;
+
+        // Filter Tabs
+        const filters = [
+            { id: 'all', label: 'Semua' },
+            { id: 'pending', label: 'Pending' },
+            { id: 'urgent', label: 'Urgent' },
+            { id: 'picked_up', label: 'Diambil' },
+            { id: 'returned', label: 'Retur' }
+        ];
+
+        let tabsHtml = `<div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1rem; scrollbar-width: none;">`;
+        filters.forEach(f => {
+            const isActive = this.currentFilter === f.id;
+            tabsHtml += `
+                <button class="badge" 
+                    style="border: none; cursor: pointer; padding: 0.5rem 1rem; border-radius: 16px; white-space: nowrap;
+                    background-color: ${isActive ? 'var(--color-primary)' : 'var(--color-surface-2)'}; 
+                    color: ${isActive ? '#fff' : 'var(--color-text-muted)'};"
+                    onclick="Dashboard.setFilter('${f.id}')">
+                    ${f.label}
+                </button>
+            `;
+        });
+        tabsHtml += `</div>`;
+        html += tabsHtml;
+
+        // Package List Container
+        html += `<div id="dashboard-package-list"></div>`;
+
+        // FAB
+        html += `
+            <a href="#add" class="fab slideUp" style="position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background-color: var(--color-primary); color: white; display: flex; justify-content: center; align-items: center; text-decoration: none; box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4); z-index: 90;">
+                <span style="font-size: 24px; line-height: 1;">+</span>
+            </a>
+        `;
+
+        container.innerHTML = html;
+
+        // Bind Search Events using existing debounce from Utils
+        const searchInput = document.getElementById('dashboard-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', window.Utils.debounce((e) => {
+                this.searchQuery = e.target.value.toLowerCase();
+                this.renderPackageList();
+            }, 300));
+        }
+
+        this.renderPackageList();
+    },
+
+    setFilter: function(filter) {
+        this.currentFilter = filter;
+        this.render(); // Re-render everything to update active tab style
+    },
+
+    renderPackageList: function() {
+        const container = document.getElementById('dashboard-package-list');
+        if (!container) return;
+
+        let packages = [];
+
+        if (this.searchQuery) {
+            packages = window.DB.searchPackages(this.searchQuery);
+            if (this.currentFilter !== 'all') {
+                if (this.currentFilter === 'urgent') {
+                    packages = packages.filter(p => p.status === 'pending' && (p.urgent || window.Utils.daysUntilDeadline(p.deadline) <= 1));
+                } else {
+                    packages = packages.filter(p => p.status === this.currentFilter);
+                }
+            }
+        } else {
+            switch (this.currentFilter) {
+                case 'all':
+                    packages = window.DB.getAllPackages();
+                    break;
+                case 'pending':
+                    packages = window.DB.getPendingPackages();
+                    break;
+                case 'urgent':
+                    packages = window.DB.getUrgentPackages();
+                    break;
+                case 'picked_up':
+                    packages = window.DB.getPackagesByStatus('picked_up');
+                    break;
+                case 'returned':
+                    packages = window.DB.getPackagesByStatus('returned');
+                    break;
+            }
+        }
+
+        if (packages.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-muted);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">📦</div>
+                    <p>Tidak ada paket yang ditemukan.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Group by Store
+        const stores = window.DB.getAllStores();
+        const storeMap = {};
+        stores.forEach(s => storeMap[s.id] = s);
+
+        const grouped = {};
+        packages.forEach(p => {
+            const storeId = p.store_id || 'unknown';
+            if (!grouped[storeId]) grouped[storeId] = [];
+            grouped[storeId].push(p);
+        });
+
+        let html = '';
+        
+        for (const [storeId, pkgs] of Object.entries(grouped)) {
+            const store = storeMap[storeId];
+            const storeName = store ? store.nama_toko : 'Toko Tidak Diketahui';
+            
+            // Sort packages within store if not already sorted by pending (pending is pre-sorted)
+            if (this.currentFilter !== 'pending' && this.currentFilter !== 'urgent') {
+                pkgs.sort((a, b) => {
+                    const daysA = window.Utils.daysUntilDeadline(a.deadline);
+                    const daysB = window.Utils.daysUntilDeadline(b.deadline);
+                    if (daysA !== daysB) return daysA - daysB;
+                    return new Date(a.created_at) - new Date(b.created_at);
+                });
+            }
+
+            html += `
+                <div style="margin-bottom: 1.5rem;" class="fadeIn">
+                    <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🏪</span> ${storeName}
+                        <span class="badge" style="background-color: var(--color-surface-2); color: var(--color-text-muted);">${pkgs.length}</span>
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            `;
+
+            pkgs.forEach(p => {
+                const daysRemaining = window.Utils.daysUntilDeadline(p.deadline);
+                const isUrgent = p.urgent || (p.status === 'pending' && daysRemaining <= 1);
+                
+                let statusClass = 'warning';
+                let statusText = '';
+                
+                if (p.status === 'picked_up') {
+                    statusClass = 'success';
+                    statusText = 'Diambil';
+                } else if (p.status === 'returned') {
+                    statusClass = 'danger';
+                    statusText = 'Retur';
+                } else {
+                    statusClass = isUrgent ? 'urgent' : 'warning';
+                    statusText = window.Utils.getDeadlineStatus(daysRemaining);
+                }
+
+                html += `
+                    <div class="card glassmorphism" style="margin-bottom: 0; cursor: pointer; padding: 1rem; border-left: 3px solid var(--color-${statusClass}); transition: transform 0.2s;" onclick="window.location.hash='#package-detail?id=${p.id}'">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <h4 style="font-size: 1rem; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${p.nama}</h4>
+                            <span class="badge badge-${statusClass}" style="white-space: nowrap;">${statusText}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">AWB: ${p.nomor_awb || '-'}</p>
+                                <p style="color: var(--color-text-muted); font-size: 0.75rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${p.pin}</span></p>
+                            </div>
+                            ${p.status === 'pending' ? `
+                            <div style="text-align: right;">
+                                <p style="color: var(--color-text-muted); font-size: 0.7rem; margin-bottom: 0.1rem;">Batas Pengambilan</p>
+                                <p style="font-size: 0.85rem; font-weight: 500; color: ${isUrgent ? 'var(--color-urgent)' : 'var(--color-text)'};">${window.Utils.formatDate(p.deadline)}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+        }
+
+        container.innerHTML = html;
+    }
+};
+
+window.Dashboard = Dashboard;

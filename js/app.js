@@ -69,7 +69,9 @@ const App = {
             targetView.classList.add('active', 'fadeIn');
             
             // Route specific logic
-            if (basePath === '#stores' && window.Store) {
+            if (basePath === '#dashboard' && window.Dashboard) {
+                window.Dashboard.render();
+            } else if (basePath === '#stores' && window.Store) {
                 window.Store.render();
             } else if (basePath === '#add' && window.Package) {
                 window.Package.renderForm(queryParams.get('edit'));
