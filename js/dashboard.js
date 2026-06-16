@@ -24,7 +24,20 @@ const Dashboard = {
             </div>
         `;
 
-        if (needsAlert) {
+        if (window.Reminder) {
+            const summaryText = window.Reminder.getDailySummary();
+            if (summaryText) {
+                const isUrgent = summaryText.includes('segera') || summaryText.includes('retur');
+                html += `
+                    <div class="card glassmorphism slideUp" style="background-color: ${isUrgent ? 'rgba(255, 59, 92, 0.1)' : 'rgba(46, 204, 113, 0.1)'}; border-left: 4px solid ${isUrgent ? 'var(--color-urgent)' : 'var(--color-success)'}; margin-bottom: 1rem; padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: ${isUrgent ? 'var(--color-urgent)' : 'var(--color-success)'}; font-weight: bold;">${isUrgent ? '⚠️ Peringatan:' : '✨ Info:'}</span>
+                            <span>${summaryText}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        } else if (needsAlert) {
             html += `
                 <div class="card glassmorphism slideUp" style="background-color: rgba(255, 59, 92, 0.1); border-left: 4px solid var(--color-urgent); margin-bottom: 1rem; padding: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -224,7 +237,10 @@ const Dashboard = {
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">AWB: ${p.nomor_awb || '-'}</p>
-                                <p style="color: var(--color-text-muted); font-size: 0.75rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${p.pin}</span></p>
+                                <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.5rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${p.pin}</span></p>
+                                <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;">
+                                    <canvas id="barcode-dash-${p.id}" style="height: 30px;"></canvas>
+                                </div>
                             </div>
                             ${p.status === 'pending' ? `
                             <div style="text-align: right;">
@@ -241,6 +257,17 @@ const Dashboard = {
         }
 
         container.innerHTML = html;
+
+        // Render barcodes
+        if (window.Barcode) {
+            setTimeout(() => {
+                packages.forEach(p => {
+                    if (p.nomor_awb) {
+                        window.Barcode.generateBarcode(p.nomor_awb, `barcode-dash-${p.id}`);
+                    }
+                });
+            }, 50);
+        }
     }
 };
 

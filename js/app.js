@@ -3,6 +3,7 @@
 const App = {
     init: function() {
         this.bindEvents();
+        if (window.Reminder) window.Reminder.init();
         this.navigate(window.location.hash || '#dashboard');
     },
 
@@ -48,7 +49,8 @@ const App = {
             '#trip': 'view-trip',
             '#stats': 'view-stats',
             '#stores': 'view-stores',
-            '#package-detail': 'view-package-detail'
+            '#package-detail': 'view-package-detail',
+            '#pickup': 'view-pickup'
         };
 
         const targetId = viewMap[basePath];
@@ -77,6 +79,12 @@ const App = {
                 window.Package.renderForm(queryParams.get('edit'));
             } else if (basePath === '#package-detail' && window.Package) {
                 window.Package.renderDetail(queryParams.get('id'));
+            } else if (basePath === '#trip' && window.Trip) {
+                window.Trip.render();
+            } else if (basePath === '#pickup' && window.Pickup) {
+                window.Pickup.render(queryParams.get('trip_id'));
+            } else if (basePath === '#stats' && window.Stats) {
+                window.Stats.render();
             }
         }
 

@@ -1,8 +1,15 @@
 ## Deskripsi
-Mengerjakan task 5: Pembuatan Dashboard utama yang menampilkan paket grouped by toko dengan dukungan filter dan pencarian, serta memberikan warning alert untuk paket urgent.
+Mengerjakan task 11: Statistik & Laporan.
+Menambahkan tampilan analitik ringkas untuk melacak performa keseluruhan dan fitur manajemen data (Backup/Restore).
+Fitur yang ditambahkan:
+1. **Statistik Cards**: Menampilkan total paket, rasio yang sudah diambil (%), jumlah retur, dan paket pending.
+2. **Rata-rata Waktu Pickup**: Menghitung secara otomatis selisih waktu masuk paket ke gerai hingga diambil oleh kurir.
+3. **Distribusi Status (Pie Chart)**: Dibuat menggunakan murni CSS `conic-gradient` tanpa library tambahan.
+4. **Paket per Toko (Bar Chart)**: Menampilkan distribusi paket pada tiap toko dengan visual bar menggunakan CSS.
+5. **Backup & Restore**: Export semua data LocalStorage (Stores, Packages, Trips) ke dalam format `.json` untuk diunduh, serta dukungan import dari file `.json` untuk restore secara utuh.
 
 ## Issue yang Terkait
-Fixes #5
+Fixes #10
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)

@@ -5,6 +5,24 @@ const Package = {
         const container = document.getElementById('package-form-container');
         if (!container) return;
 
+        const tabManual = document.getElementById('tab-manual');
+        const tabOcr = document.getElementById('tab-ocr');
+        const tabBulk = document.getElementById('tab-bulk');
+        if (tabManual && tabOcr && tabBulk) {
+            tabManual.className = 'btn btn-primary';
+            tabManual.style.background = '';
+            tabOcr.className = 'btn';
+            tabOcr.style.background = 'var(--color-surface-2)';
+            tabBulk.className = 'btn';
+            tabBulk.style.background = 'var(--color-surface-2)';
+            
+            // Hide tabs if editing
+            const tabsContainer = document.getElementById('add-tabs');
+            if (tabsContainer) {
+                tabsContainer.style.display = packageId ? 'none' : 'flex';
+            }
+        }
+
         let pkg = {
             store_id: '',
             nama: '',
@@ -188,6 +206,9 @@ const Package = {
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="grid-column: span 2; text-align: center; background: white; padding: 0.5rem; border-radius: var(--radius); overflow: hidden;">
+                        <canvas id="barcode-detail-${pkg.id}"></canvas>
+                    </div>
                     <div>
                         <p style="color: var(--color-text-muted); font-size: 0.75rem;">NO. RESI / AWB</p>
                         <p style="font-weight: 500;">${pkg.nomor_awb || '-'}</p>
@@ -227,6 +248,11 @@ const Package = {
         `;
         
         container.innerHTML = html;
+        if (pkg.nomor_awb && window.Barcode) {
+            setTimeout(() => {
+                window.Barcode.generateBarcode(pkg.nomor_awb, `barcode-detail-${pkg.id}`);
+            }, 50);
+        }
     },
 
     handleMarkPickedUp: function(id) {
