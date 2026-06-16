@@ -1,9 +1,9 @@
 ## Deskripsi
-Mengerjakan task 7: Trip Planner.
-Memungkinkan pengguna untuk merencanakan trip pengambilan paket berdasarkan kapasitas motor, paket di-grouping berdasarkan toko, auto-select paket urgent, dan mem-validasi kapasitas yang tersedia.
+Mengerjakan task 8: Mode Pickup di IDM.
+Memfasilitasi pengambilan paket secara on-the-spot di toko IDM dengan UI yang memfokuskan pada PIN (ukuran besar), tombol cepat "Diambil" dan "Skip", serta tracking persentase progres.
 
 ## Issue yang Terkait
-Fixes #11
+Fixes #8
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)
