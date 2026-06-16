@@ -1,9 +1,9 @@
 ## Deskripsi
-Mengerjakan task 6: Sistem Reminder & Deadline. 
-Menambahkan notifikasi browser untuk paket yang mendekati deadline (H-3 warning, H-1 urgent), fungsi auto-mark returned (H-0/Expired), dan ringkasan harian di dashboard.
+Mengerjakan task 7: Trip Planner.
+Memungkinkan pengguna untuk merencanakan trip pengambilan paket berdasarkan kapasitas motor, paket di-grouping berdasarkan toko, auto-select paket urgent, dan mem-validasi kapasitas yang tersedia.
 
 ## Issue yang Terkait
-Fixes #6
+Fixes #11
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)
