@@ -38,7 +38,8 @@ const App = {
             '#dashboard': 'view-dashboard',
             '#add': 'view-add',
             '#trip': 'view-trip',
-            '#stats': 'view-stats'
+            '#stats': 'view-stats',
+            '#stores': 'view-stores'
         };
 
         const targetId = viewMap[hash];
@@ -57,6 +58,11 @@ const App = {
             // trigger reflow
             void targetView.offsetWidth;
             targetView.classList.add('active', 'fadeIn');
+            
+            // Route specific logic
+            if (hash === '#stores' && window.Store) {
+                window.Store.render();
+            }
         }
 
         // Update nav active state
