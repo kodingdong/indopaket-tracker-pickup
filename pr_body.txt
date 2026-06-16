@@ -1,6 +1,6 @@
 ## Deskripsi
-Mengerjakan task 8: Mode Pickup di IDM.
-Memfasilitasi pengambilan paket secara on-the-spot di toko IDM dengan UI yang memfokuskan pada PIN (ukuran besar), tombol cepat "Diambil" dan "Skip", serta tracking persentase progres.
+Mengerjakan task 9: Barcode Generate & Scanner.
+Menambahkan visualisasi barcode Code128 dari nomor AWB di seluruh bagian aplikasi (Dashboard, Detail, Mode Pickup). Selain itu, menyediakan fitur live scanner menggunakan kamera untuk mempermudah saat di lokasi (dengan auto-match AWB dan penanda otomatis "Diambil").
 
 ## Issue yang Terkait
 Fixes #8
