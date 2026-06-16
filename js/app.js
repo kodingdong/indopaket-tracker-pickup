@@ -83,6 +83,8 @@ const App = {
                 window.Trip.render();
             } else if (basePath === '#pickup' && window.Pickup) {
                 window.Pickup.render(queryParams.get('trip_id'));
+            } else if (basePath === '#stats' && window.Stats) {
+                window.Stats.render();
             }
         }
 
