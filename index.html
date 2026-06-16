@@ -18,7 +18,7 @@
             <h2>Dashboard</h2>
             <div class="card glassmorphism fadeIn">
                 <p>Welcome to IndoPaket Tracker</p>
-                <button class="btn btn-primary">Primary Button</button>
+                <button class="btn btn-primary" onclick="window.location.hash='#stores'">Kelola Toko IDM</button>
             </div>
         </div>
         <div id="view-add" class="view" style="display: none;">
@@ -42,6 +42,14 @@
                 <p>Statistik view content...</p>
             </div>
         </div>
+        <div id="view-stores" class="view" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>Daftar Toko</h2>
+                <button id="add-store-btn" class="btn btn-primary" style="width: auto; padding: 0.5rem 1rem;" onclick="Store.renderForm()">+ Tambah</button>
+            </div>
+            <div id="store-form-container" style="display: none; margin-bottom: 1rem;"></div>
+            <div id="stores-container"></div>
+        </div>
     </main>
 
     <nav class="bottom-nav">
@@ -64,6 +72,7 @@
 
     <script src="js/utils.js"></script>
     <script src="js/db.js"></script>
+    <script src="js/store.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

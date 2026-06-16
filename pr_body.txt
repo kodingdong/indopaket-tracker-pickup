@@ -1,0 +1,17 @@
+## Deskripsi
+Mengerjakan task 3: Implementasi antarmuka untuk mengelola daftar toko Indomaret (CRUD lengkap).
+
+## Issue yang Terkait
+Fixes #3
+
+## Jenis Perubahan
+- [ ] Bug fix (perbaikan bug)
+- [x] New feature (penambahan fitur baru)
+- [ ] Refactoring (perbaikan kode tanpa mengubah fungsionalitas)
+- [ ] Dokumentasi
+
+## Checklist
+- [x] Kode sudah mengikuti standard project
+- [x] Fitur berjalan dengan baik (sudah di-test manual)
+- [x] Tidak ada error di console
+- [x] UI sudah responsive
