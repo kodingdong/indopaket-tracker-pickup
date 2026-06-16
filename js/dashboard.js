@@ -237,7 +237,10 @@ const Dashboard = {
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">AWB: ${p.nomor_awb || '-'}</p>
-                                <p style="color: var(--color-text-muted); font-size: 0.75rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${p.pin}</span></p>
+                                <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.5rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${p.pin}</span></p>
+                                <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;">
+                                    <canvas id="barcode-dash-${p.id}" style="height: 30px;"></canvas>
+                                </div>
                             </div>
                             ${p.status === 'pending' ? `
                             <div style="text-align: right;">
@@ -254,6 +257,17 @@ const Dashboard = {
         }
 
         container.innerHTML = html;
+
+        // Render barcodes
+        if (window.Barcode) {
+            setTimeout(() => {
+                packages.forEach(p => {
+                    if (p.nomor_awb) {
+                        window.Barcode.generateBarcode(p.nomor_awb, `barcode-dash-${p.id}`);
+                    }
+                });
+            }, 50);
+        }
     }
 };
 
