@@ -78,6 +78,8 @@ const App = {
                 window.Package.renderForm(queryParams.get('edit'));
             } else if (basePath === '#package-detail' && window.Package) {
                 window.Package.renderDetail(queryParams.get('id'));
+            } else if (basePath === '#trip' && window.Trip) {
+                window.Trip.render();
             }
         }
 
