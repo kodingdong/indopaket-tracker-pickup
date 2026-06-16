@@ -24,7 +24,20 @@ const Dashboard = {
             </div>
         `;
 
-        if (needsAlert) {
+        if (window.Reminder) {
+            const summaryText = window.Reminder.getDailySummary();
+            if (summaryText) {
+                const isUrgent = summaryText.includes('segera') || summaryText.includes('retur');
+                html += `
+                    <div class="card glassmorphism slideUp" style="background-color: ${isUrgent ? 'rgba(255, 59, 92, 0.1)' : 'rgba(46, 204, 113, 0.1)'}; border-left: 4px solid ${isUrgent ? 'var(--color-urgent)' : 'var(--color-success)'}; margin-bottom: 1rem; padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="color: ${isUrgent ? 'var(--color-urgent)' : 'var(--color-success)'}; font-weight: bold;">${isUrgent ? '⚠️ Peringatan:' : '✨ Info:'}</span>
+                            <span>${summaryText}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        } else if (needsAlert) {
             html += `
                 <div class="card glassmorphism slideUp" style="background-color: rgba(255, 59, 92, 0.1); border-left: 4px solid var(--color-urgent); margin-bottom: 1rem; padding: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">

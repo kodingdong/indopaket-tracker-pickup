@@ -1,8 +1,9 @@
 ## Deskripsi
-Mengerjakan task 5: Pembuatan Dashboard utama yang menampilkan paket grouped by toko dengan dukungan filter dan pencarian, serta memberikan warning alert untuk paket urgent.
+Mengerjakan task 6: Sistem Reminder & Deadline. 
+Menambahkan notifikasi browser untuk paket yang mendekati deadline (H-3 warning, H-1 urgent), fungsi auto-mark returned (H-0/Expired), dan ringkasan harian di dashboard.
 
 ## Issue yang Terkait
-Fixes #5
+Fixes #6
 
 ## Jenis Perubahan
 - [ ] Bug fix (perbaikan bug)
