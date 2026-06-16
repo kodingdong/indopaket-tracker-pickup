@@ -21,6 +21,13 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2 id="view-add-title">Tambah Paket</h2>
             </div>
+            
+            <div id="add-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.5rem;">
+                <button class="btn btn-primary" id="tab-manual" style="flex: 1; min-width: 100px; padding: 0.5rem;" onclick="Package.renderForm()">Manual</button>
+                <button class="btn" id="tab-ocr" style="flex: 1; min-width: 100px; background: var(--color-surface-2); color: white; padding: 0.5rem;" onclick="if(window.OCR) window.OCR.renderUpload()">Upload OCR</button>
+                <button class="btn" id="tab-bulk" style="flex: 1; min-width: 100px; background: var(--color-surface-2); color: white; padding: 0.5rem;" onclick="if(window.OCR) window.OCR.renderBulkPaste()">Paste Bulk</button>
+            </div>
+
             <div id="package-form-container"></div>
         </div>
         <div id="view-trip" class="view" style="display: none;">
@@ -68,10 +75,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/db.js"></script>
     <script src="js/store.js"></script>
     <script src="js/package.js"></script>
+    <script src="js/ocr.js"></script>
     <script src="js/trip.js"></script>
     <script src="js/pickup.js"></script>
     <script src="js/barcode.js"></script>

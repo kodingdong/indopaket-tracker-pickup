@@ -5,6 +5,24 @@ const Package = {
         const container = document.getElementById('package-form-container');
         if (!container) return;
 
+        const tabManual = document.getElementById('tab-manual');
+        const tabOcr = document.getElementById('tab-ocr');
+        const tabBulk = document.getElementById('tab-bulk');
+        if (tabManual && tabOcr && tabBulk) {
+            tabManual.className = 'btn btn-primary';
+            tabManual.style.background = '';
+            tabOcr.className = 'btn';
+            tabOcr.style.background = 'var(--color-surface-2)';
+            tabBulk.className = 'btn';
+            tabBulk.style.background = 'var(--color-surface-2)';
+            
+            // Hide tabs if editing
+            const tabsContainer = document.getElementById('add-tabs');
+            if (tabsContainer) {
+                tabsContainer.style.display = packageId ? 'none' : 'flex';
+            }
+        }
+
         let pkg = {
             store_id: '',
             nama: '',
