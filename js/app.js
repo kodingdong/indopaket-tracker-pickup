@@ -3,6 +3,7 @@
 const App = {
     init: function() {
         this.bindEvents();
+        if (window.Reminder) window.Reminder.init();
         this.navigate(window.location.hash || '#dashboard');
     },
 
