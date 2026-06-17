@@ -36,7 +36,11 @@ const DB = {
         if (!item.id) {
             item.id = window.Utils ? window.Utils.generateId() : Date.now().toString();
         }
-        item.created_at = new Date().toISOString();
+        const now = new Date().toISOString();
+        item.created_at = now;
+        item.updated_at = now;
+        item._deleted = false;
+        item._synced = false;
         items.push(item);
         this._save(key, items);
         return item;
@@ -47,16 +51,31 @@ const DB = {
         const index = items.findIndex(item => item.id === id);
         if (index === -1) return null;
 
-        items[index] = { ...items[index], ...updates, updated_at: new Date().toISOString() };
+        items[index] = { ...items[index], ...updates, updated_at: new Date().toISOString(), _synced: false };
         this._save(key, items);
         return items[index];
     },
 
     _delete: function(key, id) {
+        // Use soft-delete if sync is configured, otherwise hard delete
+        if (window.SyncEngine && window.SyncEngine.isConfigured()) {
+            return this._softDelete(key, id);
+        }
         const items = this._getAll(key);
         const filtered = items.filter(item => item.id !== id);
         this._save(key, filtered);
-        return filtered.length !== items.length; // Returns true if deleted
+        return filtered.length !== items.length;
+    },
+
+    _softDelete: function(key, id) {
+        const items = this._getAll(key);
+        const index = items.findIndex(item => item.id === id);
+        if (index === -1) return false;
+        items[index]._deleted = true;
+        items[index].updated_at = new Date().toISOString();
+        items[index]._synced = false;
+        this._save(key, items);
+        return true;
     },
 
     // --- Store CRUD ---
@@ -253,7 +272,52 @@ const DB = {
             console.error('Import failed', e);
             return false;
         }
+    },
+
+    // --- Sync Helpers ---
+    getUnsyncedItems: function(key) {
+        const items = this._getAll(key);
+        return items.filter(item => item._synced === false);
+    },
+
+    markAsSynced: function(key, ids) {
+        const items = this._getAll(key);
+        let changed = false;
+        items.forEach(item => {
+            if (ids.indexOf(item.id) !== -1) {
+                item._synced = true;
+                changed = true;
+            }
+        });
+        if (changed) this._save(key, items);
+    },
+
+    markAllAsSynced: function() {
+        const keys = [DB_KEYS.STORES, DB_KEYS.PACKAGES, DB_KEYS.TRIPS];
+        keys.forEach(key => {
+            const items = this._getAll(key);
+            let changed = false;
+            items.forEach(item => {
+                if (item._synced === false) {
+                    item._synced = true;
+                    changed = true;
+                }
+            });
+            if (changed) this._save(key, items);
+        });
+    },
+
+    cleanupDeleted: function() {
+        const keys = [DB_KEYS.STORES, DB_KEYS.PACKAGES, DB_KEYS.TRIPS];
+        keys.forEach(key => {
+            const items = this._getAll(key);
+            const filtered = items.filter(item => !(item._deleted === true && item._synced === true));
+            if (filtered.length !== items.length) {
+                this._save(key, filtered);
+            }
+        });
     }
 };
 
 window.DB = DB;
+window.DB_KEYS = DB_KEYS;
