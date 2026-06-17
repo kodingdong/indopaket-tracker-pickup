@@ -1,4 +1,4 @@
-const CACHE_NAME = 'indopaket-v1';
+const CACHE_NAME = 'indopaket-v2';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -13,6 +13,8 @@ const ASSETS_TO_CACHE = [
     './js/pickup.js',
     './js/barcode.js',
     './js/reminder.js',
+    './js/sync.js',
+    './js/settings.js',
     './js/dashboard.js',
     './js/app.js',
     './manifest.json',
