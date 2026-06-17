@@ -223,7 +223,7 @@ const Settings = {
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
             a.href = url;
-            a.download = 'indopaket_backup_' + Date.now() + '.json';
+            a.download = 'paket_backup_' + Date.now() + '.json';
             a.click();
             URL.revokeObjectURL(url);
             window.Utils.showToast('📤 JSON exported!', 'success');
@@ -256,7 +256,7 @@ const Settings = {
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
             a.href = url;
-            a.download = 'indopaket_packages_' + Date.now() + '.csv';
+            a.download = 'paket_packages_' + Date.now() + '.csv';
             a.click();
             URL.revokeObjectURL(url);
             window.Utils.showToast('📤 CSV exported!', 'success');
@@ -334,9 +334,9 @@ const Settings = {
     clearLocalData: function() {
         if (!confirm('🗑️ Hapus SEMUA data lokal? Tindakan ini tidak bisa dibatalkan!')) return;
         if (!confirm('⚠️ TERAKHIR KALI — yakin hapus semua data?')) return;
-        localStorage.removeItem('indopaket_stores');
-        localStorage.removeItem('indopaket_packages');
-        localStorage.removeItem('indopaket_trips');
+        localStorage.removeItem('paket_stores');
+        localStorage.removeItem('paket_packages');
+        localStorage.removeItem('paket_trips');
         window.Utils.showToast('🗑️ Data lokal dihapus', 'success');
         this.render();
     },

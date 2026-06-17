@@ -46,7 +46,7 @@ const Store = {
         let isEdit = false;
         
         if (storeId) {
-            const existing = window.DB._getById('indopaket_stores', storeId);
+            const existing = window.DB._getById('paket_stores', storeId);
             if (existing) {
                 store = existing;
                 isEdit = true;

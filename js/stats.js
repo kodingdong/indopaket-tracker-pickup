@@ -157,7 +157,7 @@ const Stats = {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href",     dataStr);
-            downloadAnchorNode.setAttribute("download", "indopaket_backup_" + new Date().getTime() + ".json");
+            downloadAnchorNode.setAttribute("download", "paket_backup_" + new Date().getTime() + ".json");
             document.body.appendChild(downloadAnchorNode); // required for firefox
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
@@ -179,10 +179,10 @@ const Stats = {
                 const data = JSON.parse(e.target.result);
                 if (data.stores && data.packages) {
                     if (confirm("Restore data akan menimpa data saat ini. Lanjutkan?")) {
-                        localStorage.setItem('indopaket_stores', JSON.stringify(data.stores));
-                        localStorage.setItem('indopaket_packages', JSON.stringify(data.packages));
+                        localStorage.setItem('paket_stores', JSON.stringify(data.stores));
+                        localStorage.setItem('paket_packages', JSON.stringify(data.packages));
                         if (data.trips) {
-                            localStorage.setItem('indopaket_trips', JSON.stringify(data.trips));
+                            localStorage.setItem('paket_trips', JSON.stringify(data.trips));
                         }
                         window.Utils.showToast("Data berhasil direstore", "success");
                         // Refresh view

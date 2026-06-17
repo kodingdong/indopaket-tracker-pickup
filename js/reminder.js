@@ -23,7 +23,7 @@ const Reminder = {
         const pending = window.DB.getPackagesByStatus('pending');
         let notifiedHistory = {};
         try {
-            notifiedHistory = JSON.parse(localStorage.getItem('indopaket_notified_history') || '{}');
+            notifiedHistory = JSON.parse(localStorage.getItem('paket_notified_history') || '{}');
         } catch (e) {}
 
         const todayDateStr = new Date().toISOString().split('T')[0];
@@ -63,7 +63,7 @@ const Reminder = {
             }
         });
 
-        localStorage.setItem('indopaket_notified_history', JSON.stringify(notifiedHistory));
+        localStorage.setItem('paket_notified_history', JSON.stringify(notifiedHistory));
         
         // Refresh dashboard if we are on it and state changed
         if (stateChanged && window.location.hash === '#dashboard' && window.Dashboard) {
