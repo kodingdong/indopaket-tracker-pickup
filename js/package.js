@@ -37,7 +37,7 @@ const Package = {
         let isEdit = false;
 
         if (packageId) {
-            const existing = window.DB._getById('indopaket_packages', packageId);
+            const existing = window.DB._getById('paket_packages', packageId);
             if (existing) {
                 pkg = { ...existing };
                 isEdit = true;
@@ -175,13 +175,13 @@ const Package = {
         const container = document.getElementById('package-detail-container');
         if (!container) return;
 
-        const pkg = window.DB._getById('indopaket_packages', id);
+        const pkg = window.DB._getById('paket_packages', id);
         if (!pkg) {
             container.innerHTML = '<p>Paket tidak ditemukan</p>';
             return;
         }
 
-        const store = window.DB._getById('indopaket_stores', pkg.store_id);
+        const store = window.DB._getById('paket_stores', pkg.store_id);
         const storeName = store ? store.nama_toko : 'Toko Tidak Diketahui';
         
         const daysRemaining = window.Utils.daysUntilDeadline(pkg.deadline);

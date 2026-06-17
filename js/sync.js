@@ -1,9 +1,9 @@
 // js/sync.js — Hybrid Sync Engine (LocalStorage ↔ Google Sheets)
 
 const SyncEngine = {
-    CONFIG_KEY: 'indopaket_sync_config',
-    SYNC_LOG_KEY: 'indopaket_sync_log',
-    DEVICE_ID_KEY: 'indopaket_device_id',
+    CONFIG_KEY: 'paket_sync_config',
+    SYNC_LOG_KEY: 'paket_sync_log',
+    DEVICE_ID_KEY: 'paket_device_id',
 
     _intervalId: null,
     _syncing: false,

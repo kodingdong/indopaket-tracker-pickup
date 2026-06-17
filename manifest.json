@@ -1,7 +1,7 @@
 {
-    "name": "IndoPaket Tracker",
-    "short_name": "IndoPaket",
-    "description": "Sistem Tracking Paket & Manajemen Pickup Indomaret",
+    "name": "Paket Pickup Tracker",
+    "short_name": "PaketTracker",
+    "description": "Sistem Tracking Paket & Manajemen Pickup",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#0f0f1a",
