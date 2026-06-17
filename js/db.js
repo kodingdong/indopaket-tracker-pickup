@@ -1,9 +1,9 @@
 // js/db.js
 
 const DB_KEYS = {
-    STORES: 'indopaket_stores',
-    PACKAGES: 'indopaket_packages',
-    TRIPS: 'indopaket_trips'
+    STORES: 'paket_stores',
+    PACKAGES: 'paket_packages',
+    TRIPS: 'paket_trips'
 };
 
 const DB = {
@@ -321,3 +321,23 @@ const DB = {
 
 window.DB = DB;
 window.DB_KEYS = DB_KEYS;
+
+// --- Data Migration: indopaket_* → paket_* ---
+// Runs once on app start to move data from old keys to new keys
+(function migrateOldData() {
+    var migrations = [
+        { from: 'indopaket_stores',   to: 'paket_stores' },
+        { from: 'indopaket_packages', to: 'paket_packages' },
+        { from: 'indopaket_trips',    to: 'paket_trips' }
+    ];
+    migrations.forEach(function(m) {
+        var oldData = localStorage.getItem(m.from);
+        var newData = localStorage.getItem(m.to);
+        // Only migrate if old data exists and new key is empty
+        if (oldData && !newData) {
+            localStorage.setItem(m.to, oldData);
+            localStorage.removeItem(m.from);
+            console.log('[DB Migration] Moved ' + m.from + ' → ' + m.to);
+        }
+    });
+})();
