@@ -4,6 +4,8 @@ const App = {
     init: function() {
         this.bindEvents();
         if (window.Reminder) window.Reminder.init();
+        if (window.SyncEngine) window.SyncEngine.init();
+        this.updateSyncIndicator();
         this.navigate(window.location.hash || '#dashboard');
     },
 
@@ -50,7 +52,8 @@ const App = {
             '#stats': 'view-stats',
             '#stores': 'view-stores',
             '#package-detail': 'view-package-detail',
-            '#pickup': 'view-pickup'
+            '#pickup': 'view-pickup',
+            '#settings': 'view-settings'
         };
 
         const targetId = viewMap[basePath];
@@ -85,6 +88,8 @@ const App = {
                 window.Pickup.render(queryParams.get('trip_id'));
             } else if (basePath === '#stats' && window.Stats) {
                 window.Stats.render();
+            } else if (basePath === '#settings' && window.Settings) {
+                window.Settings.render();
             }
         }
 
@@ -97,9 +102,55 @@ const App = {
                 item.classList.remove('active');
             }
         });
+    },
+
+    updateSyncIndicator: function() {
+        var el = document.getElementById('sync-indicator');
+        if (!el || !window.SyncEngine) return;
+        var status = window.SyncEngine.getSyncStatus();
+        el.className = 'sync-badge';
+        if (!status.isConfigured || status.mode === 'off') {
+            el.className += ' not-configured';
+            el.textContent = '☁️';
+            el.title = 'Sync: Off';
+        } else if (status.isSyncing) {
+            el.className += ' syncing';
+            el.textContent = '☁️';
+            el.title = 'Syncing...';
+        } else if (!status.isOnline) {
+            el.className += ' offline';
+            el.textContent = '☁️';
+            el.title = 'Offline';
+        } else {
+            el.className += ' synced';
+            el.textContent = '☁️';
+            el.title = 'Synced: ' + (status.lastSync ? new Date(status.lastSync).toLocaleString('id-ID') : 'Ready');
+        }
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
+
+    // Sync event listeners
+    window.addEventListener('sync-start', () => {
+        App.updateSyncIndicator();
+    });
+    window.addEventListener('sync-complete', (e) => {
+        App.updateSyncIndicator();
+        if (e.detail && e.detail.success) {
+            // Refresh current view if on dashboard
+            if (window.location.hash === '#dashboard' && window.Dashboard) {
+                window.Dashboard.render();
+            }
+        }
+    });
+    window.addEventListener('online', () => {
+        App.updateSyncIndicator();
+        window.Utils.showToast('🟢 Kembali online', 'success');
+    });
+    window.addEventListener('offline', () => {
+        App.updateSyncIndicator();
+        window.Utils.showToast('🔴 Mode offline', 'warning');
+    });
 });
