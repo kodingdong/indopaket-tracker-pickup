@@ -7,14 +7,37 @@
 ## Daftar Isi
 
 **PART 1 — Instalasi & Fitur Utama**
+
 1. [Apa itu Paket Pickup Tracker?](#1-apa-itu-paket-pickup-tracker)
+   - 1.1 Masalah yang Diselesaikan
+   - 1.2 Fitur Utama
+   - 1.3 Cara Kerja Singkat
 2. [Instalasi PWA](#2-instalasi-pwa)
+   - 2.1 Android (Chrome)
+   - 2.2 iPhone/iPad (Safari)
+   - 2.3 Desktop (Chrome/Edge)
+   - 2.4 Verifikasi Instalasi
 3. [Setup Awal (First-Time Setup)](#3-setup-awal)
 4. [Manajemen Toko](#4-manajemen-toko)
+   - 4.1 Menambah Toko
+   - 4.2 Edit Toko
+   - 4.3 Hapus Toko
+   - 4.4 Info Toko
 5. [Manajemen Paket](#5-manajemen-paket)
+   - 5.1 Input Manual
+   - 5.2 Edit Paket
+   - 5.3 Hapus Paket
+   - 5.4 Tandai Sudah Diambil
+   - 5.5 Status Paket
+   - 5.6 Sistem Reminder Otomatis
 6. [Dashboard](#6-dashboard)
+   - 6.1 Komponen Dashboard
+   - 6.2 Pencarian
+   - 6.3 Filter
+   - 6.4 Kartu Paket
 
-**PART 2 — Fitur Lanjutan & Troubleshoot** *(file terpisah)*
+**PART 2 — Fitur Lanjutan & Troubleshoot** *(lihat [PANDUAN_PENGGUNA_PART2.md](PANDUAN_PENGGUNA_PART2.md))*
+
 7. Trip Planner & Mode Pickup
 8. Barcode & Scanner
 9. OCR & Bulk Input
@@ -22,6 +45,8 @@
 11. Google Sheets Sync
 12. Backup & Restore
 13. Troubleshooting
+14. Tips & Best Practices
+15. FAQ
 
 ---
 
