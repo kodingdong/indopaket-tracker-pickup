@@ -4,6 +4,48 @@
 
 ---
 
+## Daftar Isi
+
+7. [Trip Planner & Mode Pickup](#7-trip-planner--mode-pickup)
+   - 7.1 Apa itu Trip?
+   - 7.2 Membuat Trip
+   - 7.3 Mode Pickup
+8. [Barcode & Scanner](#8-barcode--scanner)
+   - 8.1 Barcode Otomatis
+   - 8.2 Scanner Kamera
+9. [OCR & Bulk Input](#9-ocr--bulk-input)
+   - 9.1 Upload OCR (Scan Foto Resi)
+   - 9.2 Paste Bulk (dari Excel/Spreadsheet)
+10. [Statistik & Laporan](#10-statistik--laporan)
+    - 10.1 Metrik yang Ditampilkan
+    - 10.2 Visualisasi
+    - 10.3 Backup dari Halaman Statistik
+11. [Google Sheets Sync (Cloud Sync)](#11-google-sheets-sync-cloud-sync)
+    - 11.1 Arsitektur
+    - 11.2 Setup Google Sheets (Satu Kali)
+    - 11.3 Cara Sync
+    - 11.4 Indikator Sync
+    - 11.5 Force Push & Force Pull
+    - 11.6 Sync Log
+12. [Backup & Restore](#12-backup--restore)
+    - 12.1 Dari Halaman Pengaturan
+    - 12.2 Export JSON
+    - 12.3 Import JSON
+    - 12.4 Format CSV Export
+    - 12.5 Danger Zone
+13. [Troubleshooting](#13-troubleshooting)
+    - 13.1 Instalasi & PWA
+    - 13.2 Data & LocalStorage
+    - 13.3 Google Sheets Sync
+    - 13.4 Barcode & Scanner
+    - 13.5 OCR
+    - 13.6 Notifikasi & Reminder
+    - 13.7 Performa & Umum
+14. [Tips & Best Practices](#14-tips--best-practices)
+15. [FAQ](#15-faq)
+
+---
+
 ## 7. Trip Planner & Mode Pickup
 
 ### 7.1 Apa itu Trip?

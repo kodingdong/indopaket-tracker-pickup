@@ -6,6 +6,7 @@ const App = {
         if (window.Reminder) window.Reminder.init();
         if (window.SyncEngine) window.SyncEngine.init();
         this.updateSyncIndicator();
+        this.updateAdminNavVisibility();
         this.navigate(window.location.hash || '#dashboard');
     },
 
@@ -53,7 +54,8 @@ const App = {
             '#stores': 'view-stores',
             '#package-detail': 'view-package-detail',
             '#pickup': 'view-pickup',
-            '#settings': 'view-settings'
+            '#settings': 'view-settings',
+            '#admin': 'view-admin'
         };
 
         const targetId = viewMap[basePath];
@@ -90,6 +92,8 @@ const App = {
                 window.Stats.render();
             } else if (basePath === '#settings' && window.Settings) {
                 window.Settings.render();
+            } else if (basePath === '#admin' && window.Admin) {
+                window.Admin.render();
             }
         }
 
@@ -102,6 +106,14 @@ const App = {
                 item.classList.remove('active');
             }
         });
+    },
+
+    updateAdminNavVisibility: function() {
+        var cfg = window.SyncEngine ? window.SyncEngine.getConfig() : {};
+        var adminNav = document.querySelector('.nav-admin-only');
+        if (adminNav) {
+            adminNav.style.display = (cfg.role === 'admin') ? 'flex' : 'none';
+        }
     },
 
     updateSyncIndicator: function() {

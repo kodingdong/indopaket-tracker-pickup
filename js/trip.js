@@ -164,6 +164,7 @@ const Trip = {
 
         const trip = window.DB.createTrip(tripData);
         window.Utils.showToast('Trip dimulai!', 'success');
+        if (window.AuditLog) window.AuditLog.log('CREATE_TRIP', 'trip', { trip_id: trip.id, packages: tripData.packages.length });
         
         this.selectedPackages.clear();
         

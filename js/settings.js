@@ -28,6 +28,7 @@ const Settings = {
                     <select class="input" id="settings-device-role">
                         <option value="input" ${cfg.role === 'input' ? 'selected' : ''}>📥 Input (Istri)</option>
                         <option value="picker" ${cfg.role === 'picker' ? 'selected' : ''}>🛵 Picker (Suami)</option>
+                        <option value="admin" ${cfg.role === 'admin' ? 'selected' : ''}>🖥️ Admin (Laptop/PC)</option>
                     </select>
                 </div>
             </div>
@@ -175,6 +176,8 @@ const Settings = {
 
         window.Utils.showToast('✅ Konfigurasi tersimpan!', 'success');
         if (window.App && window.App.updateSyncIndicator) window.App.updateSyncIndicator();
+        if (window.App && window.App.updateAdminNavVisibility) window.App.updateAdminNavVisibility();
+        if (window.AuditLog) window.AuditLog.log('CONFIG_CHANGE', 'settings', { role: cfg.role, mode: cfg.mode, deviceName: cfg.deviceName });
     },
 
     // --- Sync Actions ---
@@ -227,6 +230,7 @@ const Settings = {
             a.click();
             URL.revokeObjectURL(url);
             window.Utils.showToast('📤 JSON exported!', 'success');
+            if (window.AuditLog) window.AuditLog.log('EXPORT_DATA', 'settings', { format: 'JSON' });
         } catch (e) { window.Utils.showToast('❌ Export gagal', 'danger'); }
     },
 
@@ -260,6 +264,7 @@ const Settings = {
             a.click();
             URL.revokeObjectURL(url);
             window.Utils.showToast('📤 CSV exported!', 'success');
+            if (window.AuditLog) window.AuditLog.log('EXPORT_DATA', 'settings', { format: 'CSV' });
         } catch (e) { window.Utils.showToast('❌ Export CSV gagal', 'danger'); }
     },
 
@@ -278,6 +283,7 @@ const Settings = {
                 if (!confirm('Import data akan menimpa data saat ini. Lanjutkan?')) return;
                 window.DB.importAll(e.target.result);
                 window.Utils.showToast('✅ Data berhasil di-import!', 'success');
+                if (window.AuditLog) window.AuditLog.log('IMPORT_DATA', 'settings', { format: 'JSON' });
                 Settings.render();
             } catch (err) {
                 window.Utils.showToast('❌ Gagal membaca file JSON', 'danger');
@@ -311,6 +317,7 @@ const Settings = {
                     }
                 }
                 window.Utils.showToast('✅ ' + count + ' paket di-import dari CSV!', 'success');
+                if (window.AuditLog) window.AuditLog.log('IMPORT_DATA', 'settings', { format: 'CSV', count: count });
                 Settings.render();
             } catch (err) { window.Utils.showToast('❌ Gagal membaca CSV', 'danger'); }
         };
@@ -338,6 +345,7 @@ const Settings = {
         localStorage.removeItem('paket_packages');
         localStorage.removeItem('paket_trips');
         window.Utils.showToast('🗑️ Data lokal dihapus', 'success');
+        if (window.AuditLog) window.AuditLog.log('CLEAR_LOCAL', 'settings', { message: 'All local data cleared' });
         this.render();
     },
 
@@ -347,6 +355,7 @@ const Settings = {
         try {
             await window.SyncEngine.pushToCloud({ stores: [], packages: [], trips: [] });
             window.Utils.showToast('🗑️ Data cloud dihapus', 'success');
+            if (window.AuditLog) window.AuditLog.log('CLEAR_CLOUD', 'settings', { message: 'All cloud data cleared' });
         } catch (e) { window.Utils.showToast('❌ Gagal hapus cloud: ' + e.message, 'danger'); }
     },
 
@@ -361,7 +370,7 @@ const Settings = {
         }
         var html = '';
         devices.forEach(function(d) {
-            var roleIcon = d.role === 'picker' ? '🛵' : '📥';
+            var roleIcon = d.role === 'picker' ? '🛵' : d.role === 'admin' ? '🖥️' : '📥';
             var lastSeen = d.last_seen ? Settings._timeAgo(d.last_seen) : 'Unknown';
             html += '<div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--color-surface-2);">' +
                 '<span>' + roleIcon + ' ' + (d.device_name || d.device_id) + ' <span style="color:var(--color-text-muted);">(' + (d.role || '') + ')</span></span>' +

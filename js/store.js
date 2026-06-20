@@ -111,9 +111,11 @@ const Store = {
         if (storeId) {
             window.DB.updateStore(storeId, data);
             window.Utils.showToast('Toko berhasil diupdate', 'success');
+            if (window.AuditLog) window.AuditLog.log('UPDATE_STORE', 'store', { kode_toko: kode, nama_toko: nama });
         } else {
             window.DB.createStore(data);
             window.Utils.showToast('Toko berhasil ditambahkan', 'success');
+            if (window.AuditLog) window.AuditLog.log('CREATE_STORE', 'store', { kode_toko: kode, nama_toko: nama });
         }
         
         this.closeForm();
@@ -122,8 +124,10 @@ const Store = {
 
     handleDelete: function(storeId) {
         if (confirm('Apakah Anda yakin ingin menghapus toko ini? Semua paket terkait akan kehilangan referensi nama tokonya.')) {
+            var store = window.DB._getById('paket_stores', storeId);
             window.DB.deleteStore(storeId);
             window.Utils.showToast('Toko berhasil dihapus', 'success');
+            if (window.AuditLog) window.AuditLog.log('DELETE_STORE', 'store', { kode_toko: store ? store.kode_toko : '', nama_toko: store ? store.nama_toko : '' });
             this.render();
         }
     }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paket-v3';
+const CACHE_NAME = 'paket-v4';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -14,6 +14,8 @@ const ASSETS_TO_CACHE = [
     './js/barcode.js',
     './js/reminder.js',
     './js/sync.js',
+    './js/audit-log.js',
+    './js/admin.js',
     './js/settings.js',
     './js/dashboard.js',
     './js/app.js',
