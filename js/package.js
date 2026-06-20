@@ -48,8 +48,15 @@ const Package = {
         }
 
         const stores = window.DB.getAllStores();
+        
+        let selectedStoreText = '';
+        if (pkg.store_id) {
+            const ss = stores.find(s => s.id === pkg.store_id);
+            if (ss) selectedStoreText = `${ss.nama_toko} (${ss.kode_toko})`;
+        }
+
         const storeOptions = stores.map(s => 
-            `<option value="${s.id}" ${s.id === pkg.store_id ? 'selected' : ''}>${s.nama_toko} (${s.kode_toko})</option>`
+            `<option value="${s.nama_toko} (${s.kode_toko})"></option>`
         ).join('');
 
         const html = `
@@ -57,10 +64,10 @@ const Package = {
                 <form id="packageForm" onsubmit="event.preventDefault(); Package.handleSave('${isEdit ? packageId : ''}')">
                     <div class="form-group">
                         <label>Toko Indomaret (Wajib)</label>
-                        <select id="pkg_store" required style="width: 100%; padding: 0.75rem; border-radius: var(--radius); border: 1px solid var(--color-surface-2); background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-main);">
-                            <option value="">-- Pilih Toko --</option>
+                        <input list="store_list" id="pkg_store_input" value="${selectedStoreText}" required placeholder="-- Ketik nama atau kode toko --" style="width: 100%; padding: 0.75rem; border-radius: var(--radius); border: 1px solid var(--color-surface-2); background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-main);">
+                        <datalist id="store_list">
                             ${storeOptions}
-                        </select>
+                        </datalist>
                     </div>
                     <div class="form-group">
                         <label>Nama Penerima (Wajib)</label>
@@ -139,12 +146,20 @@ const Package = {
     },
 
     handleSave: function(packageId) {
-        const store_id = document.getElementById('pkg_store').value;
+        const storeInput = document.getElementById('pkg_store_input').value;
+        const stores = window.DB.getAllStores();
+        const selectedStore = stores.find(s => `${s.nama_toko} (${s.kode_toko})` === storeInput);
+        const store_id = selectedStore ? selectedStore.id : '';
+        
         const nama = document.getElementById('pkg_nama').value.trim();
         const pin = document.getElementById('pkg_pin').value.trim();
         
-        if (!store_id || !nama || !pin) {
-            window.Utils.showToast('Store, Nama, dan PIN wajib diisi', 'danger');
+        if (!store_id) {
+            window.Utils.showToast('Pilih toko yang valid dari daftar', 'danger');
+            return;
+        }
+        if (!nama || !pin) {
+            window.Utils.showToast('Nama dan PIN wajib diisi', 'danger');
             return;
         }
 
