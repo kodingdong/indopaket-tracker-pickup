@@ -168,6 +168,10 @@ const Pickup = {
         }
 
         window.Utils.showToast('Paket ditandai Diambil', 'success');
+        if (window.AuditLog) {
+            var pkg = this.tripPackages.find(function(p) { return p.id === packageId; });
+            window.AuditLog.log('PICKUP_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '', via: 'trip_pickup' });
+        }
         this.renderContent();
     },
 
@@ -232,6 +236,7 @@ const Pickup = {
         }
         if (window.Barcode) window.Barcode.stopScanner();
         window.Utils.showToast('Trip Selesai!', 'success');
+        if (window.AuditLog) window.AuditLog.log('COMPLETE_TRIP', 'trip', { trip_id: this.currentTripId, packages: this.tripPackages.length });
         window.location.hash = '#dashboard';
     }
 };

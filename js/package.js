@@ -163,9 +163,11 @@ const Package = {
         if (packageId) {
             window.DB.updatePackage(packageId, data);
             window.Utils.showToast('Paket berhasil diupdate', 'success');
+            if (window.AuditLog) window.AuditLog.log('UPDATE_PACKAGE', 'package', { nama: nama, nomor_awb: data.nomor_awb });
         } else {
             window.DB.createPackage(data);
             window.Utils.showToast('Paket berhasil ditambahkan', 'success');
+            if (window.AuditLog) window.AuditLog.log('CREATE_PACKAGE', 'package', { nama: nama, nomor_awb: data.nomor_awb, pin: pin });
         }
 
         window.location.hash = '#dashboard';
@@ -257,16 +259,20 @@ const Package = {
 
     handleMarkPickedUp: function(id) {
         if (confirm('Tandai paket ini sudah diambil?')) {
+            var pkg = window.DB._getById('paket_packages', id);
             window.DB.markAsPickedUp(id);
             window.Utils.showToast('Status paket diperbarui', 'success');
-            window.history.back(); // return to previous view
+            if (window.AuditLog) window.AuditLog.log('PICKUP_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '' });
+            window.history.back();
         }
     },
 
     handleDelete: function(id) {
         if (confirm('Hapus paket ini secara permanen?')) {
+            var pkg = window.DB._getById('paket_packages', id);
             window.DB.deletePackage(id);
             window.Utils.showToast('Paket dihapus', 'success');
+            if (window.AuditLog) window.AuditLog.log('DELETE_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '' });
             window.history.back();
         }
     }
