@@ -58,6 +58,7 @@
             <!-- Pickup content will be dynamically rendered here by js/pickup.js -->
         </div>
         <div id="view-settings" class="view" style="display: none;"></div>
+        <div id="view-admin" class="view" style="display: none;"></div>
     </main>
 
     <nav class="bottom-nav">
@@ -72,6 +73,9 @@
         </a>
         <a href="#stats" class="nav-item" data-target="view-stats">
             <span>Statistik</span>
+        </a>
+        <a href="#admin" class="nav-item nav-admin-only" data-target="view-admin">
+            <span>🖥️</span>
         </a>
         <a href="#settings" class="nav-item" data-target="view-settings">
             <span>⚙️</span>
@@ -95,6 +99,8 @@
     <script src="js/barcode.js"></script>
     <script src="js/reminder.js"></script>
     <script src="js/sync.js"></script>
+    <script src="js/audit-log.js"></script>
+    <script src="js/admin.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/app.js"></script>
