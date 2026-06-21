@@ -155,21 +155,52 @@ const OCR = {
                 var pinMatch = text.match(/\b(?=[A-Z]*\d)[A-Z0-9]{6}\b/i) || text.match(/\b\d{6}\b/i);
                 var pin = pinMatch ? pinMatch[0].toUpperCase() : '';
 
-                // Extract Nama: Find first line that isn't the AWB, PIN, or a system code
-                var nama = 'Unknown';
+                // Extract Deadline from "Diperbarui Aktif" (e.g. "05-Jun-2026")
+                var extractedDeadline = deadlineVal;
+                var activeDateMatch = text.match(/\b(\d{1,2})-(Jan|Feb|Mar|Apr|Mei|Jun|Jul|Agu|Sep|Okt|Nov|Des)-(\d{4})\b/i);
+                if (activeDateMatch) {
+                    var monthStr = activeDateMatch[2].toLowerCase();
+                    var monthMap = {'jan':'01','feb':'02','mar':'03','apr':'04','mei':'05','jun':'06','jul':'07','agu':'08','sep':'09','okt':'10','nov':'11','des':'12'};
+                    var m = monthMap[monthStr];
+                    var d = activeDateMatch[1].padStart(2, '0');
+                    var y = activeDateMatch[3];
+                    var parsedDate = new Date(y + '-' + m + '-' + d);
+                    if (!isNaN(parsedDate.getTime())) {
+                        parsedDate.setDate(parsedDate.getDate() + 3); // Tambah 3 hari dari tanggal aktif
+                        extractedDeadline = parsedDate.toISOString().split('T')[0];
+                    }
+                }
+
+                // Extract Nama: Filter out static Indopaket tracking labels
+                var nama = '';
                 var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 2; });
+                var blacklistExact = ['estimated delivery', 'current status', 'dalam pengantaran', 'pesanan ditempatkan', 'telah dikirim', 'sedang transit', 'paket sudah tiba di toko', 'paket sudah dilakukan pengambilan', 'kurir', 'indopaket', 'nomor awb', 'kode pin', 'diperbarui aktif', 'invoice number'];
                 for (var j = 0; j < lines.length; j++) {
                     var line = lines[j];
+                    var lower = line.toLowerCase();
                     if (awb && line.toUpperCase().indexOf(awb) !== -1) continue;
                     if (pin && line.toUpperCase().indexOf(pin) !== -1) continue;
                     if (storeResult && line.toUpperCase().indexOf(storeResult.code.toUpperCase()) !== -1) continue;
-                    // Skip if it looks like a date, pure numbers, or short uppercase codes
-                    if (line.match(/^[\d\s:-]+$/)) continue;
-                    if (line.match(/^[A-Z0-9\s:-]+$/) && line.length < 10) continue; 
+                    if (line.match(/^[\d\s:,\.-]+$/)) continue; // skip pure numbers/dates
+                    if (line.match(/^[A-Z0-9\s:-]+$/) && line.length < 10) continue; // skip short codes
+                    
+                    var isBlacklisted = false;
+                    for (var b = 0; b < blacklistExact.length; b++) {
+                        if (lower.indexOf(blacklistExact[b]) !== -1) { isBlacklisted = true; break; }
+                    }
+                    if (isBlacklisted) {
+                        if (lower.indexOf('tiba di toko') !== -1) {
+                            var extract = line.substring(lower.indexOf('toko') + 4).trim();
+                            if (extract.length > 2) nama = extract;
+                        }
+                        continue;
+                    }
+                    if (lower.match(/(senin|selasa|rabu|kamis|jumat|sabtu|minggu|jan|feb|mar|apr|mei|jun|jul|agu|sep|okt|nov|des)/)) continue;
                     
                     nama = line; 
                     break;
                 }
+                if (!nama) nama = 'Unknown';
 
                 this.extractedData.push({
                     store_id: storeId,
@@ -177,7 +208,7 @@ const OCR = {
                     nama: nama,
                     nomor_awb: awb,
                     pin: pin,
-                    deadline: deadlineVal,
+                    deadline: extractedDeadline,
                     urgent: urgentVal,
                     catatan: 'Hasil OCR'
                 });
@@ -398,10 +429,11 @@ const OCR = {
         var container = document.getElementById('package-form-container');
         if (!container) return;
         var stores = window.DB.getAllStores();
-        var storeSelectOptions = '<option value="">-- Pilih --</option>';
-        stores.forEach(function(s) { storeSelectOptions += '<option value="' + s.id + '">' + s.kode_toko + ' - ' + s.nama_toko + '</option>'; });
+        var storeDatalist = '<datalist id="store_list_rev">';
+        stores.forEach(function(s) { storeDatalist += '<option value="' + s.kode_toko + ' - ' + s.nama_toko + '"></option>'; });
+        storeDatalist += '</datalist>';
         
-        var html = '<div class="card glassmorphism slideUp">' +
+        var html = '<div class="card glassmorphism slideUp">' + storeDatalist +
             '<h3 style="margin-top:0;">Review Data (' + this.extractedData.length + ' item)</h3>' +
             '<p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:1rem;">Periksa dan perbaiki hasil deteksi sebelum disimpan.</p>' +
             '<div style="overflow-x:auto;">' +
@@ -418,9 +450,15 @@ const OCR = {
         
         for (var idx = 0; idx < this.extractedData.length; idx++) {
             var d = this.extractedData[idx];
-            var selOpts = storeSelectOptions.replace('value="' + d.store_id + '"', 'value="' + d.store_id + '" selected');
+            var storeInputVal = '';
+            if (d.store_id) {
+                var sFound = stores.find(function(s) { return s.id === d.store_id; });
+                if (sFound) storeInputVal = sFound.kode_toko + ' - ' + sFound.nama_toko;
+            } else if (d.store_code) {
+                storeInputVal = d.store_code;
+            }
             html += '<tr id="review-row-' + idx + '" style="border-bottom:1px solid var(--color-surface-2);">' +
-                '<td style="padding:0.5rem;"><select id="rev_store_' + idx + '" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;font-size:0.8rem;">' + selOpts + '</select></td>' +
+                '<td style="padding:0.5rem;"><input list="store_list_rev" id="rev_store_' + idx + '" value="' + storeInputVal + '" placeholder="Ketik/Pilih Toko" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;font-size:0.8rem;"></td>' +
                 '<td style="padding:0.5rem;"><input type="text" id="rev_nama_' + idx + '" value="' + (d.nama || '') + '" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
                 '<td style="padding:0.5rem;"><input type="text" id="rev_awb_' + idx + '" value="' + (d.nomor_awb || '') + '" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
                 '<td style="padding:0.5rem;"><input type="text" id="rev_pin_' + idx + '" value="' + (d.pin || '') + '" style="width:80px;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
@@ -452,7 +490,20 @@ const OCR = {
         for (var i = 0; i < this.extractedData.length; i++) {
             var row = document.getElementById('review-row-' + i);
             if (row && row.getAttribute('data-deleted') !== 'true') {
-                var storeId = document.getElementById('rev_store_' + i).value;
+                var storeInputStr = document.getElementById('rev_store_' + i).value.trim();
+                var storeId = '';
+                if (storeInputStr) {
+                    var stores = window.DB.getAllStores();
+                    var sMatch = stores.find(function(s) { return (s.kode_toko + ' - ' + s.nama_toko) === storeInputStr; });
+                    if (sMatch) storeId = sMatch.id;
+                    else {
+                        var possibleCode = storeInputStr.split(' ')[0].trim().toUpperCase();
+                        var sCodeMatch = stores.find(function(s) { return s.kode_toko.toUpperCase() === possibleCode || s.kode_toko.toUpperCase() === storeInputStr.toUpperCase(); });
+                        if (sCodeMatch) storeId = sCodeMatch.id;
+                        else storeId = storeInputStr; // Raw string fallback
+                    }
+                }
+                
                 var nama = document.getElementById('rev_nama_' + i).value.trim();
                 var pin = document.getElementById('rev_pin_' + i).value.trim();
                 var deadlineVal = document.getElementById('rev_deadline_' + i).value || defaultDeadline;
