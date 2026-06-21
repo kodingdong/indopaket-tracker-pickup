@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paket-v1.0.2';
+const CACHE_NAME = 'paket-v1.0.3';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -26,25 +26,32 @@ const ASSETS_TO_CACHE = [
     'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'
 ];
 
+// Listen for skip waiting message from client
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
 // Install Event
 self.addEventListener('install', event => {
-    self.skipWaiting(); // Force activate new SW immediately
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Opened cache');
+                console.log('[SW] Caching app shell');
                 return cache.addAll(ASSETS_TO_CACHE);
             })
     );
 });
 
-// Activate Event
+// Activate Event - clean old caches and claim clients
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME) {
+                        console.log('[SW] Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -53,26 +60,60 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Fetch Event - Cache-First Strategy
+// Fetch Event - Network-First for navigations & SW, Cache-First for assets
 self.addEventListener('fetch', event => {
+    const requestUrl = new URL(event.request.url);
+
+    // Network-first for HTML navigations (always get latest page)
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // Network-first for local JS/CSS files (always check for updates)
+    if (requestUrl.origin === location.origin &&
+        (requestUrl.pathname.endsWith('.js') || requestUrl.pathname.endsWith('.css') || requestUrl.pathname.endsWith('.json'))) {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    if (response && response.status === 200) {
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // Cache-first for external CDN resources (fonts, libraries)
     event.respondWith(
         caches.match(event.request)
             .then(response => {
-                // Return cached response if found
                 if (response) {
                     return response;
                 }
-                
-                // Else fetch from network
+
                 const fetchRequest = event.request.clone();
                 return fetch(fetchRequest).then(
                     response => {
-                        // Check if valid response
-                        if(!response || response.status !== 200 || response.type !== 'basic') {
+                        if (!response || response.status !== 200) {
                             return response;
                         }
 
-                        // Cache the newly fetched asset
                         const responseToCache = response.clone();
                         caches.open(CACHE_NAME)
                             .then(cache => {
