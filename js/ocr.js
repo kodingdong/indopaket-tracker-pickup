@@ -193,14 +193,14 @@ const OCR = {
                         if (pIdx !== -1) {
                             var afterTiba = line.substring(pIdx + 19).trim();
                             if (afterTiba.toLowerCase().startsWith('toko')) afterTiba = afterTiba.substring(4).trim();
-                            afterTiba = afterTiba.replace(/^["'\|\-\s]+|["'\|\-\s]+$/g, '');
+                            afterTiba = afterTiba.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
                             if (afterTiba.length > 2) nama = afterTiba;
                         }
                         continue;
                     }
                     if (lower.match(/(senin|selasa|rabu|kamis|jumat|sabtu|minggu|jan|feb|mar|apr|mei|jun|jul|agu|sep|okt|nov|des)/)) continue;
                     
-                    nama = line.replace(/^["'\|\-\s]+|["'\|\-\s]+$/g, ''); 
+                    nama = line.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, ''); 
                     break;
                 }
                 if (!nama) nama = 'Unknown';
