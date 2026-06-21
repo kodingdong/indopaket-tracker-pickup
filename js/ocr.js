@@ -147,8 +147,8 @@ const OCR = {
                     }
                 }
                 
-                // Extract AWB: Priority 1: IDP/OR/SPX/JNT prefixes, Priority 2: 10+ alphanumeric WITH at least one digit
-                var awbMatch = text.match(/\b(?:IDP|OR|SPX|JNT|JP|JX)[A-Z0-9]{5,20}\b/i) || text.match(/\b(?=.*\d)[A-Z0-9]{10,25}\b/i);
+                // Extract AWB: Priority 1: IDP/OR/SPX/JNT prefixes, Priority 2: 10+ alphanumeric WITH at least one digit IN THE WORD
+                var awbMatch = text.match(/\b(?:IDP|OR|SPX|JNT|JP|JX)[A-Z0-9]{5,20}\b/i) || text.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{10,25}\b/i);
                 var awb = awbMatch ? awbMatch[0].toUpperCase() : '';
                 
                 // Extract PIN: Priority 1: 6 chars with at least one digit, Priority 2: any 6 digits
@@ -299,8 +299,8 @@ const OCR = {
             var storeCode = ''; var storeId = ''; var awb = ''; var pin = '';
             var nama = line;
 
-            // 1. Extract AWB (10-25 alphanumeric chars WITH at least one digit, ignore phone numbers starting with 08)
-            var awbMatches = nama.match(/\b(?=.*\d)[A-Z0-9]{10,25}\b/ig);
+            // 1. Extract AWB (10-25 alphanumeric chars WITH at least one digit IN THE WORD, ignore phone numbers starting with 08)
+            var awbMatches = nama.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{10,25}\b/ig);
             if (awbMatches) {
                 for (var j = 0; j < awbMatches.length; j++) {
                     if (!awbMatches[j].match(/^08\d+$/)) {
@@ -340,10 +340,32 @@ const OCR = {
                 }
             }
             
-            // If store not found, try to guess a 4-letter code that looks like a store code (MUST BE ALL CAPS to avoid matching names like "Tina")
+            // If exact store not found, use a fuzzy match to catch OCR typos (e.g. 'tion' or 'ton' instead of 'TJON')
+            if (!foundStore) {
+                var words = nama.split(/\s+/);
+                for (var w = 0; w < words.length; w++) {
+                    var word = words[w];
+                    if (word.length >= 3 && word.length <= 5 && !word.match(/^\d+$/)) {
+                        for (var s = 0; s < stores.length; s++) {
+                            var code = (stores[s].kode_toko || '').toLowerCase();
+                            var wl = word.toLowerCase();
+                            if (code.length >= 3 && wl[0] === code[0] && wl[wl.length-1] === code[code.length-1] && Math.abs(code.length - wl.length) <= 1) {
+                                storeCode = stores[s].kode_toko.toUpperCase();
+                                storeId = stores[s].id;
+                                nama = nama.replace(new RegExp('\\b' + word + '\\b', 'i'), '');
+                                foundStore = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (foundStore) break;
+                }
+            }
+            
+            // Fallback 3: try to guess a 4-letter code that looks like a store code (MUST BE ALL CAPS)
             if (!foundStore) {
                 var storeMatch = nama.match(/\b[A-Z0-9]{4}\b/);
-                if (storeMatch && !storeMatch[0].match(/^\d+$/)) { // don't match 4 digits like a year
+                if (storeMatch && !storeMatch[0].match(/^\d+$/)) {
                     storeCode = storeMatch[0].toUpperCase();
                     unknownCodes.push(storeCode);
                     nama = nama.replace(storeMatch[0], '');
