@@ -133,7 +133,7 @@ const OCR = {
         
         for (var i = 0; i < total; i++) {
             statusText.innerText = 'Memproses gambar ' + (i+1) + ' dari ' + total + '...';
-            progressBar.style.width = Math.round((i / total) * 100) + '%';
+            progressBar.style.width = Math.round(((i) / total) * 100) + '%';
             try {
                 var result = await Tesseract.recognize(this.selectedFiles[i], 'ind+eng');
                 var text = result.data.text;
@@ -146,22 +146,37 @@ const OCR = {
                         unknownCodes.push(storeResult.code);
                     }
                 }
-                var awbMatch = text.match(/IDP\d+/i);
-                var pinMatch = text.match(/\b\d{6}\b/);
-                var nama = '';
-                var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
+                
+                // Extract AWB: Priority 1: IDP/OR/SPX/JNT prefixes, Priority 2: 2-5 letters followed by 8+ digits, Priority 3: 10+ alphanumeric
+                var awbMatch = text.match(/\b(?:IDP|OR|SPX|JNT|JP|JX)[A-Z0-9]{5,20}\b/i) || text.match(/\b[A-Z]{2,5}[0-9]{8,20}\b/i) || text.match(/\b[A-Z0-9]{10,25}\b/i);
+                var awb = awbMatch ? awbMatch[0].toUpperCase() : '';
+                
+                // Extract PIN: Priority 1: 6 chars with at least one digit, Priority 2: any 6 digits
+                var pinMatch = text.match(/\b(?=[A-Z]*\d)[A-Z0-9]{6}\b/i) || text.match(/\b\d{6}\b/i);
+                var pin = pinMatch ? pinMatch[0].toUpperCase() : '';
+
+                // Extract Nama: Find first line that isn't the AWB, PIN, or a system code
+                var nama = 'Unknown';
+                var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 2; });
                 for (var j = 0; j < lines.length; j++) {
                     var line = lines[j];
-                    if (line.length > 3 && !line.match(/IDP/i) && !line.match(/^\d+$/) && !line.match(/^[A-Z]{4}$/)) {
-                        nama = line; break;
-                    }
+                    if (awb && line.toUpperCase().indexOf(awb) !== -1) continue;
+                    if (pin && line.toUpperCase().indexOf(pin) !== -1) continue;
+                    if (storeResult && line.toUpperCase().indexOf(storeResult.code.toUpperCase()) !== -1) continue;
+                    // Skip if it looks like a date, pure numbers, or short uppercase codes
+                    if (line.match(/^[\d\s:-]+$/)) continue;
+                    if (line.match(/^[A-Z0-9\s:-]+$/) && line.length < 10) continue; 
+                    
+                    nama = line; 
+                    break;
                 }
+
                 this.extractedData.push({
                     store_id: storeId,
                     store_code: storeResult ? storeResult.code : '',
-                    nama: nama || 'Unknown',
-                    nomor_awb: awbMatch ? awbMatch[0].toUpperCase() : '',
-                    pin: pinMatch ? pinMatch[0] : '',
+                    nama: nama,
+                    nomor_awb: awb,
+                    pin: pin,
                     deadline: deadlineVal,
                     urgent: urgentVal,
                     catatan: 'Hasil OCR'
@@ -278,28 +293,79 @@ const OCR = {
         var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 2; });
         var results = [];
         var stores = window.DB.getAllStores();
+        
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
-            // Try to split by tabs or multiple spaces
-            var cols = line.split(/\t+/);
-            if (cols.length < 2) cols = line.split(/\s{2,}/);
-            if (cols.length < 2) continue;
-            // Try to detect fields
-            var storeCode = ''; var storeId = ''; var awb = ''; var pin = ''; var nama = '';
-            for (var c = 0; c < cols.length; c++) {
-                var val = cols[c].trim();
-                if (!val) continue;
-                if (!awb && val.match(/^IDP\d+/i)) { awb = val.toUpperCase(); continue; }
-                if (!pin && val.match(/^\d{6}$/)) { pin = val; continue; }
-                if (!storeCode) {
-                    var found = stores.find(function(s) { return s.kode_toko && val.toUpperCase() === s.kode_toko.toUpperCase(); });
-                    if (found) { storeCode = found.kode_toko; storeId = found.id; continue; }
-                    if (val.match(/^[A-Z]{4}$/i)) { storeCode = val.toUpperCase(); unknownCodes.push(storeCode); continue; }
+            var storeCode = ''; var storeId = ''; var awb = ''; var pin = '';
+            var nama = line;
+
+            // 1. Extract AWB (10-25 alphanumeric chars, ignore phone numbers starting with 08)
+            var awbMatches = nama.match(/\b[A-Z0-9]{10,25}\b/ig);
+            if (awbMatches) {
+                for (var j = 0; j < awbMatches.length; j++) {
+                    if (!awbMatches[j].match(/^08\d+$/)) {
+                        awb = awbMatches[j].toUpperCase();
+                        nama = nama.replace(awbMatches[j], '');
+                        break;
+                    }
                 }
-                if (!nama && val.length > 2 && !val.match(/^\d+$/)) { nama = val; }
             }
+
+            // 2. Extract PIN (6 alphanumeric chars, preferably with a digit)
+            var pinRegex = /\b(?=[A-Z]*\d)[A-Z0-9]{6}\b/i; // Must contain at least one digit
+            var pinMatch = nama.match(pinRegex);
+            if (!pinMatch) {
+                // Fallback to any 6 alphanumeric if no digit found, take from the end of string
+                var fallbackMatch = nama.match(/\b[A-Z0-9]{6}\b/ig);
+                if (fallbackMatch) pinMatch = [fallbackMatch[fallbackMatch.length - 1]];
+            }
+            if (pinMatch) {
+                pin = pinMatch[0].toUpperCase();
+                nama = nama.replace(new RegExp('\\b' + pinMatch[0] + '\\b', 'i'), '');
+            }
+
+            // 3. Extract Store Code (check against known stores first)
+            var foundStore = false;
+            for (var s = 0; s < stores.length; s++) {
+                var kode = stores[s].kode_toko;
+                if (kode && kode.length >= 3) {
+                    var regex = new RegExp('\\b' + kode + '\\b', 'i');
+                    if (nama.match(regex)) {
+                        storeCode = kode.toUpperCase();
+                        storeId = stores[s].id;
+                        nama = nama.replace(regex, '');
+                        foundStore = true;
+                        break;
+                    }
+                }
+            }
+            
+            // If store not found, try to guess a 4-letter code that looks like a store code
+            if (!foundStore) {
+                var storeMatch = nama.match(/\b[A-Z]{4}\b/i);
+                if (storeMatch) {
+                    storeCode = storeMatch[0].toUpperCase();
+                    unknownCodes.push(storeCode);
+                    nama = nama.replace(storeMatch[0], '');
+                }
+            }
+
+            // Clean up nama (remove extra spaces and non-alphabet characters at the edges)
+            nama = nama.replace(/\s+/g, ' ').trim();
+            // Remove common leftover artifacts like single letters or symbols if isolated
+            nama = nama.replace(/^[^\w\s]\s*/, '').replace(/\s*[^\w\s]$/, '');
+            
             if (nama || awb) {
-                results.push({ store_id: storeId, store_code: storeCode, nama: nama || 'Unknown', nomor_awb: awb, pin: pin, deadline: deadline, urgent: urgent, catatan: 'Bulk OCR' });
+                results.push({
+                    store_id: storeId,
+                    store_code: storeCode,
+                    nama: nama || 'Unknown',
+                    nomor_awb: awb,
+                    pin: pin,
+                    deadline: deadline,
+                    urgent: urgent,
+                    catatan: 'Bulk OCR'
+                });
             }
         }
         return results;
