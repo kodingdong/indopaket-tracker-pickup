@@ -147,8 +147,8 @@ const OCR = {
                     }
                 }
                 
-                // Extract AWB: Priority 1: IDP/OR/SPX/JNT prefixes, Priority 2: 2-5 letters followed by 8+ digits, Priority 3: 10+ alphanumeric
-                var awbMatch = text.match(/\b(?:IDP|OR|SPX|JNT|JP|JX)[A-Z0-9]{5,20}\b/i) || text.match(/\b[A-Z]{2,5}[0-9]{8,20}\b/i) || text.match(/\b[A-Z0-9]{10,25}\b/i);
+                // Extract AWB: Priority 1: IDP/OR/SPX/JNT prefixes, Priority 2: 10+ alphanumeric WITH at least one digit
+                var awbMatch = text.match(/\b(?:IDP|OR|SPX|JNT|JP|JX)[A-Z0-9]{5,20}\b/i) || text.match(/\b(?=.*\d)[A-Z0-9]{10,25}\b/i);
                 var awb = awbMatch ? awbMatch[0].toUpperCase() : '';
                 
                 // Extract PIN: Priority 1: 6 chars with at least one digit, Priority 2: any 6 digits
@@ -299,8 +299,8 @@ const OCR = {
             var storeCode = ''; var storeId = ''; var awb = ''; var pin = '';
             var nama = line;
 
-            // 1. Extract AWB (10-25 alphanumeric chars, ignore phone numbers starting with 08)
-            var awbMatches = nama.match(/\b[A-Z0-9]{10,25}\b/ig);
+            // 1. Extract AWB (10-25 alphanumeric chars WITH at least one digit, ignore phone numbers starting with 08)
+            var awbMatches = nama.match(/\b(?=.*\d)[A-Z0-9]{10,25}\b/ig);
             if (awbMatches) {
                 for (var j = 0; j < awbMatches.length; j++) {
                     if (!awbMatches[j].match(/^08\d+$/)) {
@@ -340,10 +340,10 @@ const OCR = {
                 }
             }
             
-            // If store not found, try to guess a 4-letter code that looks like a store code
+            // If store not found, try to guess a 4-letter code that looks like a store code (MUST BE ALL CAPS to avoid matching names like "Tina")
             if (!foundStore) {
-                var storeMatch = nama.match(/\b[A-Z]{4}\b/i);
-                if (storeMatch) {
+                var storeMatch = nama.match(/\b[A-Z0-9]{4}\b/);
+                if (storeMatch && !storeMatch[0].match(/^\d+$/)) { // don't match 4 digits like a year
                     storeCode = storeMatch[0].toUpperCase();
                     unknownCodes.push(storeCode);
                     nama = nama.replace(storeMatch[0], '');

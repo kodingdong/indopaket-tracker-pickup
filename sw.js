@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paket-v5';
+const CACHE_NAME = 'paket-v6';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
