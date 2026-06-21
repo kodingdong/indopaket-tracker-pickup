@@ -28,6 +28,7 @@ const ASSETS_TO_CACHE = [
 
 // Install Event
 self.addEventListener('install', event => {
+    self.skipWaiting(); // Force activate new SW immediately
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
@@ -48,7 +49,7 @@ self.addEventListener('activate', event => {
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim()) // Take control of all open pages immediately
     );
 });
 
