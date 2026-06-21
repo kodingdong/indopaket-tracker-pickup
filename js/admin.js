@@ -108,7 +108,7 @@ const Admin = {
         const allPkgs = window.DB.getAllPackages().filter(p => !p._deleted);
         const stores = window.DB.getAllStores();
         const storeMap = {};
-        stores.forEach(s => storeMap[s.id] = s);
+        stores.forEach(s => storeMap[s.kode_toko] = s);
 
         let rows = '';
         allPkgs.forEach(function(p) {
@@ -160,7 +160,7 @@ const Admin = {
         const stores = window.DB.getAllStores().filter(s => !s._deleted);
         let rows = '';
         stores.forEach(function(s) {
-            const pkgs = window.DB.getPackagesByStore(s.id);
+            const pkgs = window.DB.getPackagesByStore(s.kode_toko);
             const pending = pkgs.filter(p => p.status === 'pending').length;
             const total = pkgs.filter(p => !p._deleted).length;
             rows += '<tr style="border-bottom:1px solid var(--color-surface-2);">' +

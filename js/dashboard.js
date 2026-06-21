@@ -176,7 +176,7 @@ const Dashboard = {
         // Group by Store
         const stores = window.DB.getAllStores();
         const storeMap = {};
-        stores.forEach(s => storeMap[s.id] = s);
+        stores.forEach(s => storeMap[s.kode_toko] = s);
 
         const grouped = {};
         packages.forEach(p => {

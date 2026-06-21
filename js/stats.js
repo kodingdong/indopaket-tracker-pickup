@@ -17,7 +17,7 @@ const Stats = {
 
         // Count per store
         const storeCounts = {};
-        stores.forEach(s => storeCounts[s.id] = { nama: s.nama_toko, count: 0 });
+        stores.forEach(s => storeCounts[s.kode_toko] = { nama: s.nama_toko, count: 0 });
 
         pkgs.forEach(p => {
             if (p.status === 'pending') pending++;

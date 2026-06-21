@@ -239,7 +239,7 @@ const Settings = {
             var pkgs = window.DB.getAllPackages();
             var stores = window.DB.getAllStores();
             var storeMap = {};
-            stores.forEach(function(s) { storeMap[s.id] = s.kode_toko || s.nama_toko || ''; });
+            stores.forEach(function(s) { storeMap[s.kode_toko] = s.kode_toko || s.nama_toko || ''; });
 
             var rows = [['Nama', 'AWB', 'PIN', 'Toko', 'Status', 'Tanggal Masuk', 'Deadline', 'Urgent'].join(',')];
             pkgs.forEach(function(p) {

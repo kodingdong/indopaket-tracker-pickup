@@ -51,7 +51,7 @@ const Package = {
         
         let selectedStoreText = '';
         if (pkg.store_id) {
-            const ss = stores.find(s => s.id === pkg.store_id);
+            const ss = stores.find(s => s.kode_toko === pkg.store_id);
             if (ss) selectedStoreText = `${ss.nama_toko} (${ss.kode_toko})`;
         }
 
@@ -149,7 +149,7 @@ const Package = {
         const storeInput = document.getElementById('pkg_store_input').value;
         const stores = window.DB.getAllStores();
         const selectedStore = stores.find(s => `${s.nama_toko} (${s.kode_toko})` === storeInput);
-        const store_id = selectedStore ? selectedStore.id : '';
+        const store_id = selectedStore ? selectedStore.kode_toko : '';
         
         const nama = document.getElementById('pkg_nama').value.trim();
         const pin = document.getElementById('pkg_pin').value.trim();
@@ -198,7 +198,7 @@ const Package = {
             return;
         }
 
-        const store = window.DB._getById('paket_stores', pkg.store_id);
+        const store = window.DB.getStoreByKode(pkg.store_id);
         const storeName = store ? store.nama_toko : 'Toko Tidak Diketahui';
         
         const daysRemaining = window.Utils.daysUntilDeadline(pkg.deadline);

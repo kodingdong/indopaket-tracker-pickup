@@ -141,7 +141,7 @@ const OCR = {
                 var storeId = '';
                 if (storeResult) {
                     if (storeResult.store) {
-                        storeId = storeResult.store.id;
+                        storeId = storeResult.store.kode_toko;
                     } else {
                         unknownCodes.push(storeResult.code);
                     }
@@ -374,7 +374,7 @@ const OCR = {
                     var regex = new RegExp('\\b' + kode + '\\b', 'i');
                     if (nama.match(regex)) {
                         storeCode = kode.toUpperCase();
-                        storeId = stores[s].id;
+                        storeId = stores[s].kode_toko;
                         nama = nama.replace(regex, '');
                         foundStore = true;
                         break;
@@ -393,7 +393,7 @@ const OCR = {
                             var wl = word.toLowerCase();
                             if (code.length >= 3 && wl[0] === code[0] && wl[wl.length-1] === code[code.length-1] && Math.abs(code.length - wl.length) <= 1) {
                                 storeCode = stores[s].kode_toko.toUpperCase();
-                                storeId = stores[s].id;
+                                storeId = stores[s].kode_toko;
                                 nama = nama.replace(new RegExp('\\b' + word + '\\b', 'i'), '');
                                 foundStore = true;
                                 break;
@@ -463,7 +463,7 @@ const OCR = {
             var d = this.extractedData[idx];
             var storeInputVal = '';
             if (d.store_id) {
-                var sFound = stores.find(function(s) { return s.id === d.store_id; });
+                var sFound = stores.find(function(s) { return s.kode_toko === d.store_id; });
                 if (sFound) storeInputVal = sFound.kode_toko + ' - ' + sFound.nama_toko;
             } else if (d.store_code) {
                 storeInputVal = d.store_code;
@@ -506,11 +506,11 @@ const OCR = {
                 if (storeInputStr) {
                     var stores = window.DB.getAllStores();
                     var sMatch = stores.find(function(s) { return (s.kode_toko + ' - ' + s.nama_toko) === storeInputStr; });
-                    if (sMatch) storeId = sMatch.id;
+                    if (sMatch) storeId = sMatch.kode_toko;
                     else {
                         var possibleCode = storeInputStr.split(' ')[0].trim().toUpperCase();
                         var sCodeMatch = stores.find(function(s) { return s.kode_toko.toUpperCase() === possibleCode || s.kode_toko.toUpperCase() === storeInputStr.toUpperCase(); });
-                        if (sCodeMatch) storeId = sCodeMatch.id;
+                        if (sCodeMatch) storeId = sCodeMatch.kode_toko;
                         else storeId = storeInputStr; // Raw string fallback
                     }
                 }
@@ -559,7 +559,7 @@ const OCR = {
             if (cols.length >= 3) {
                 var storeCode = cols.length >= 4 ? cols[0].trim() : '';
                 var found = stores.find(function(s) { return s.kode_toko && s.kode_toko.toUpperCase() === storeCode.toUpperCase(); });
-                OCR.extractedData.push({ store_id: found ? found.id : '', store_code: storeCode, nama: cols.length >= 4 ? cols[1].trim() : cols[0].trim(), nomor_awb: cols.length >= 4 ? cols[2].trim() : cols[1].trim(), pin: cols.length >= 4 ? cols[3].trim() : cols[2].trim(), deadline: deadline, urgent: false });
+                OCR.extractedData.push({ store_id: found ? found.kode_toko : '', store_code: storeCode, nama: cols.length >= 4 ? cols[1].trim() : cols[0].trim(), nomor_awb: cols.length >= 4 ? cols[2].trim() : cols[1].trim(), pin: cols.length >= 4 ? cols[3].trim() : cols[2].trim(), deadline: deadline, urgent: false });
             }
         });
         if (this.extractedData.length > 0) this.renderReview();

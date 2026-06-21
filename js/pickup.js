@@ -55,7 +55,7 @@ const Pickup = {
 
         const stores = window.DB.getAllStores();
         const storeMap = {};
-        stores.forEach(s => storeMap[s.id] = s);
+        stores.forEach(s => storeMap[s.kode_toko] = s);
 
         let html = `
             <div style="position: sticky; top: 0; background: var(--color-bg); z-index: 10; padding: 1rem 0; margin-bottom: 1rem; border-bottom: 1px solid var(--color-surface-2);">
