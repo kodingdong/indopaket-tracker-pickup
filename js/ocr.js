@@ -174,7 +174,7 @@ const OCR = {
                 // Extract Nama: Filter out static Indopaket tracking labels
                 var nama = '';
                 var lines = text.split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 2; });
-                var blacklistExact = ['estimated delivery', 'current status', 'dalam pengantaran', 'pesanan ditempatkan', 'telah dikirim', 'sedang transit', 'paket sudah tiba di toko', 'paket sudah dilakukan pengambilan', 'kurir', 'indopaket', 'nomor awb', 'kode pin', 'diperbarui aktif', 'invoice number'];
+                var blacklistExact = ['estimated delivery', 'current status', 'dalam pengantaran', 'pesanan ditempatkan', 'telah dikirim', 'sedang transit', 'paket sudah tiba di', 'paket sudah dilakukan', 'kurir', 'indopaket', 'nomor awb', 'kode pin', 'diperbarui aktif', 'invoice number'];
                 for (var j = 0; j < lines.length; j++) {
                     var line = lines[j];
                     var lower = line.toLowerCase();
@@ -189,18 +189,26 @@ const OCR = {
                         if (lower.indexOf(blacklistExact[b]) !== -1) { isBlacklisted = true; break; }
                     }
                     if (isBlacklisted) {
-                        if (lower.indexOf('tiba di toko') !== -1) {
-                            var extract = line.substring(lower.indexOf('toko') + 4).trim();
-                            if (extract.length > 2) nama = extract;
+                        var pIdx = lower.indexOf('paket sudah tiba di');
+                        if (pIdx !== -1) {
+                            var afterTiba = line.substring(pIdx + 19).trim();
+                            if (afterTiba.toLowerCase().startsWith('toko')) afterTiba = afterTiba.substring(4).trim();
+                            afterTiba = afterTiba.replace(/^["'\|\-\s]+|["'\|\-\s]+$/g, '');
+                            if (afterTiba.length > 2) nama = afterTiba;
                         }
                         continue;
                     }
                     if (lower.match(/(senin|selasa|rabu|kamis|jumat|sabtu|minggu|jan|feb|mar|apr|mei|jun|jul|agu|sep|okt|nov|des)/)) continue;
                     
-                    nama = line; 
+                    nama = line.replace(/^["'\|\-\s]+|["'\|\-\s]+$/g, ''); 
                     break;
                 }
                 if (!nama) nama = 'Unknown';
+                
+                // Cleanup Tesseract artifact where big text is read as single letters with spaces (e.g. "H e r i")
+                if (nama.match(/^([A-Za-z]\s)+[A-Za-z]$/)) {
+                    nama = nama.replace(/\s+/g, '');
+                }
 
                 this.extractedData.push({
                     store_id: storeId,
