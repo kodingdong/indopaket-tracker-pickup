@@ -175,6 +175,14 @@ const Package = {
             catatan: document.getElementById('pkg_catatan').value.trim()
         };
 
+        if (!packageId && data.nomor_awb) {
+            const existing = window.DB.getAllPackages().find(p => p.nomor_awb && p.nomor_awb.toUpperCase().trim() === data.nomor_awb.toUpperCase().trim());
+            if (existing) {
+                window.Utils.showToast('Nomor AWB sudah terdaftar!', 'danger');
+                return;
+            }
+        }
+
         if (packageId) {
             window.DB.updatePackage(packageId, data);
             window.Utils.showToast('Paket berhasil diupdate', 'success');

@@ -24,12 +24,19 @@ const SyncEngine = {
     // Config Management
     // ================================================================
     getConfig: function() {
+        var defaultUrl = 'https://script.google.com/macros/s/AKfycbwds0XPr-6s8DAaB2BNxvK1U4-INxFwpHEHTeBuNQmH85a8_h0FGwr2abFy2t5wZ2jc/exec';
         try {
             var raw = localStorage.getItem(this.CONFIG_KEY);
-            if (raw) return JSON.parse(raw);
+            if (raw) {
+                var parsed = JSON.parse(raw);
+                if (!parsed.scriptUrl) {
+                    parsed.scriptUrl = defaultUrl;
+                }
+                return parsed;
+            }
         } catch (e) { /* ignore */ }
         return {
-            scriptUrl: '',
+            scriptUrl: defaultUrl,
             deviceName: '',
             role: 'input',
             mode: 'off',           // 'off' | 'manual' | 'auto'
@@ -135,9 +142,9 @@ const SyncEngine = {
 
             // 2. Get local data
             var localData = {
-                stores: window.DB.getAllStores(),
-                packages: window.DB.getAllPackages(),
-                trips: window.DB.getAllTrips()
+                stores: window.DB.getAllStores(true),
+                packages: window.DB.getAllPackages(true),
+                trips: window.DB.getAllTrips(true)
             };
 
             // 3. Merge
@@ -238,9 +245,9 @@ const SyncEngine = {
         if (!cfg.scriptUrl) throw new Error('Not configured');
 
         var data = {
-            stores: window.DB.getAllStores(),
-            packages: window.DB.getAllPackages(),
-            trips: window.DB.getAllTrips()
+            stores: window.DB.getAllStores(true),
+            packages: window.DB.getAllPackages(true),
+            trips: window.DB.getAllTrips(true)
         };
 
         var payload = {

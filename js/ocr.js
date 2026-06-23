@@ -147,12 +147,12 @@ const OCR = {
                     }
                 }
                 
-                // Extract AWB: Priority 1: IDP/OR/SPX/JNT prefixes, Priority 2: 10+ alphanumeric WITH at least one digit IN THE WORD
-                var awbMatch = text.match(/\b(?:IDP|OR|SPX|JNT|JP|JX)[A-Z0-9]{5,20}\b/i) || text.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{10,25}\b/i);
+                // Extract AWB: Priority 1: OR followed by 13 digits, Priority 2: IDP/SPX/JNT/JP/JX, Priority 3: any 10-25 alphanumeric with at least one digit
+                var awbMatch = text.match(/\bOR\d{13}\b/i) || text.match(/\b(?:IDP|SPX|JNT|JP|JX)[A-Z0-9]{5,20}\b/i) || text.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{10,25}\b/i);
                 var awb = awbMatch ? awbMatch[0].toUpperCase() : '';
                 
-                // Extract PIN: Priority 1: 6 chars with at least one digit, Priority 2: any 6 digits
-                var pinMatch = text.match(/\b(?=[A-Z]*\d)[A-Z0-9]{6}\b/i) || text.match(/\b\d{6}\b/i);
+                // Extract PIN: Priority 1: 6 chars mix letters & digits, Priority 2: any 6 digits
+                var pinMatch = text.match(/\b(?=[A-Z0-9]*[A-Z])(?=[A-Z0-9]*\d)[A-Z0-9]{6}\b/i) || text.match(/\b\d{6}\b/i);
                 var pin = pinMatch ? pinMatch[0].toUpperCase() : '';
 
                 // Extract Deadline from "Diperbarui Aktif" (e.g. "05-Jun-2026")
@@ -341,8 +341,8 @@ const OCR = {
             var storeCode = ''; var storeId = ''; var awb = ''; var pin = '';
             var nama = line;
 
-            // 1. Extract AWB (10-25 alphanumeric chars WITH at least one digit IN THE WORD, ignore phone numbers starting with 08)
-            var awbMatches = nama.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{10,25}\b/ig);
+            // 1. Extract AWB (Priority 1: OR + 13 digits, Priority 2: generic 10-25 alphanumeric chars)
+            var awbMatches = nama.match(/\bOR\d{13}\b/ig) || nama.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{10,25}\b/ig);
             if (awbMatches) {
                 for (var j = 0; j < awbMatches.length; j++) {
                     if (!awbMatches[j].match(/^08\d+$/)) {
@@ -353,13 +353,13 @@ const OCR = {
                 }
             }
 
-            // 2. Extract PIN (6 alphanumeric chars, preferably with a digit)
-            var pinRegex = /\b(?=[A-Z]*\d)[A-Z0-9]{6}\b/i; // Must contain at least one digit
+            // 2. Extract PIN (6 alphanumeric chars, preferably with letters and digits mixed)
+            var pinRegex = /\b(?=[A-Z0-9]*[A-Z])(?=[A-Z0-9]*\d)[A-Z0-9]{6}\b/i;
             var pinMatch = nama.match(pinRegex);
             if (!pinMatch) {
-                // Fallback to any 6 alphanumeric if no digit found, take from the end of string
-                var fallbackMatch = nama.match(/\b[A-Z0-9]{6}\b/ig);
-                if (fallbackMatch) pinMatch = [fallbackMatch[fallbackMatch.length - 1]];
+                // Fallback to any 6 alphanumeric if no mixed found, take from the end of string
+                var fallbackMatch = nama.match(/\b\d{6}\b/i) || nama.match(/\b[A-Z0-9]{6}\b/ig);
+                if (fallbackMatch) pinMatch = Array.isArray(fallbackMatch) ? [fallbackMatch[fallbackMatch.length - 1]] : [fallbackMatch];
             }
             if (pinMatch) {
                 pin = pinMatch[0].toUpperCase();
@@ -459,6 +459,8 @@ const OCR = {
                         '<th style="padding:0.5rem;">Aksi</th>' +
                     '</tr></thead><tbody>';
         
+        var existingPackages = window.DB.getAllPackages();
+        
         for (var idx = 0; idx < this.extractedData.length; idx++) {
             var d = this.extractedData[idx];
             var storeInputVal = '';
@@ -468,11 +470,32 @@ const OCR = {
             } else if (d.store_code) {
                 storeInputVal = d.store_code;
             }
+
+            var awbWarning = '';
+            var pinWarning = '';
+            var awbStyle = 'width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;';
+            var pinStyle = 'width:80px;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;';
+            
+            var isDuplicate = d.nomor_awb && existingPackages.some(function(p) { return p.nomor_awb && p.nomor_awb.toUpperCase().trim() === d.nomor_awb.toUpperCase().trim(); });
+            
+            if (isDuplicate) {
+                awbStyle += 'border-color:var(--color-urgent); background-color:rgba(235, 77, 75, 0.2);';
+                awbWarning = '<span style="color:var(--color-urgent);font-size:0.7rem;display:block;">⚠️ Duplikat</span>';
+            } else if (d.nomor_awb && !d.nomor_awb.toUpperCase().match(/^OR\d{13}$/)) {
+                awbStyle += 'border-color:var(--color-warning); background-color:rgba(241, 196, 15, 0.2);';
+                awbWarning = '<span style="color:var(--color-warning);font-size:0.7rem;display:block;">⚠️ Format: OR+13 angka</span>';
+            }
+            
+            if (d.pin && !d.pin.toUpperCase().match(/^[A-Z0-9]{6}$/)) {
+                pinStyle += 'border-color:var(--color-warning); background-color:rgba(241, 196, 15, 0.2);';
+                pinWarning = '<span style="color:var(--color-warning);font-size:0.7rem;display:block;">⚠️ Harus 6 kar</span>';
+            }
+
             html += '<tr id="review-row-' + idx + '" style="border-bottom:1px solid var(--color-surface-2);">' +
                 '<td style="padding:0.5rem;"><input list="store_list_rev" id="rev_store_' + idx + '" value="' + storeInputVal + '" placeholder="Ketik/Pilih Toko" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;font-size:0.8rem;"></td>' +
                 '<td style="padding:0.5rem;"><input type="text" id="rev_nama_' + idx + '" value="' + (d.nama || '') + '" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
-                '<td style="padding:0.5rem;"><input type="text" id="rev_awb_' + idx + '" value="' + (d.nomor_awb || '') + '" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
-                '<td style="padding:0.5rem;"><input type="text" id="rev_pin_' + idx + '" value="' + (d.pin || '') + '" style="width:80px;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
+                '<td style="padding:0.5rem;"><input type="text" id="rev_awb_' + idx + '" value="' + (d.nomor_awb || '') + '" style="' + awbStyle + '">' + awbWarning + '</td>' +
+                '<td style="padding:0.5rem;"><input type="text" id="rev_pin_' + idx + '" value="' + (d.pin || '') + '" style="' + pinStyle + '">' + pinWarning + '</td>' +
                 '<td style="padding:0.5rem;"><input type="date" id="rev_deadline_' + idx + '" value="' + (d.deadline || '') + '" style="padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
                 '<td style="padding:0.5rem;text-align:center;"><input type="checkbox" id="rev_urgent_' + idx + '"' + (d.urgent ? ' checked' : '') + '></td>' +
                 '<td style="padding:0.5rem;"><button class="btn badge-danger" style="padding:0.25rem 0.5rem;border:none;" onclick="OCR.removeRow(' + idx + ')">✕</button></td>' +
@@ -489,56 +512,109 @@ const OCR = {
     },
 
     removeRow: function(index) {
-        var row = document.getElementById('review-row-' + index);
-        if (row) { row.style.display = 'none'; row.setAttribute('data-deleted', 'true'); }
+        this.syncInputsToData();
+        this.extractedData.splice(index, 1);
+        this.renderReview();
+    },
+
+    syncInputsToData: function() {
+        for (var i = 0; i < this.extractedData.length; i++) {
+            var storeInput = document.getElementById('rev_store_' + i);
+            var namaInput = document.getElementById('rev_nama_' + i);
+            var awbInput = document.getElementById('rev_awb_' + i);
+            var pinInput = document.getElementById('rev_pin_' + i);
+            var deadlineInput = document.getElementById('rev_deadline_' + i);
+            var urgentInput = document.getElementById('rev_urgent_' + i);
+            
+            if (storeInput) {
+                var val = storeInput.value.trim();
+                if (val.includes(' - ')) {
+                    this.extractedData[i].store_id = val.split(' - ')[0].trim();
+                    this.extractedData[i].store_code = val.split(' - ')[0].trim();
+                } else {
+                    this.extractedData[i].store_code = val;
+                }
+            }
+            if (namaInput) this.extractedData[i].nama = namaInput.value.trim();
+            if (awbInput) this.extractedData[i].nomor_awb = awbInput.value.trim();
+            if (pinInput) this.extractedData[i].pin = pinInput.value.trim();
+            if (deadlineInput) this.extractedData[i].deadline = deadlineInput.value;
+            if (urgentInput) this.extractedData[i].urgent = urgentInput.checked;
+        }
     },
 
     saveAll: function() {
+        this.syncInputsToData();
+        
         var savedCount = 0;
         var now = new Date().toISOString().split('T')[0];
         var defaultDeadline = window.Utils.calculateDeadline(now, 7);
         
+        var existingPackages = window.DB.getAllPackages();
+        var awbSet = new Set(existingPackages.map(function(p) { return (p.nomor_awb || '').toUpperCase().trim(); }));
+        var batchAwbSet = new Set();
+        var duplicatesCount = 0;
+        
         for (var i = 0; i < this.extractedData.length; i++) {
-            var row = document.getElementById('review-row-' + i);
-            if (row && row.getAttribute('data-deleted') !== 'true') {
-                var storeInputStr = document.getElementById('rev_store_' + i).value.trim();
-                var storeId = '';
-                if (storeInputStr) {
-                    var stores = window.DB.getAllStores();
-                    var sMatch = stores.find(function(s) { return (s.kode_toko + ' - ' + s.nama_toko) === storeInputStr; });
-                    if (sMatch) storeId = sMatch.kode_toko;
-                    else {
-                        var possibleCode = storeInputStr.split(' ')[0].trim().toUpperCase();
-                        var sCodeMatch = stores.find(function(s) { return s.kode_toko.toUpperCase() === possibleCode || s.kode_toko.toUpperCase() === storeInputStr.toUpperCase(); });
-                        if (sCodeMatch) storeId = sCodeMatch.kode_toko;
-                        else storeId = storeInputStr; // Raw string fallback
-                    }
-                }
-                
-                var nama = document.getElementById('rev_nama_' + i).value.trim();
-                var pin = document.getElementById('rev_pin_' + i).value.trim();
-                var deadlineVal = document.getElementById('rev_deadline_' + i).value || defaultDeadline;
-                if (nama && pin) {
-                    window.DB.createPackage({
-                        store_id: storeId,
-                        nama: nama,
-                        nomor_awb: document.getElementById('rev_awb_' + i).value.trim(),
-                        pin: pin,
-                        invoice: '',
-                        tanggal_masuk: now + 'T00:00:00.000Z',
-                        deadline: deadlineVal + 'T23:59:59.999Z',
-                        urgent: document.getElementById('rev_urgent_' + i).checked,
-                        catatan: 'Bulk Input'
-                    });
-                    savedCount++;
+            var d = this.extractedData[i];
+            var storeId = d.store_id || d.store_code || '';
+            
+            if (storeId) {
+                var stores = window.DB.getAllStores();
+                var sMatch = stores.find(function(s) { return s.kode_toko === storeId || (s.kode_toko + ' - ' + s.nama_toko) === storeId; });
+                if (sMatch) {
+                    storeId = sMatch.kode_toko;
+                } else {
+                    var possibleCode = storeId.split(' ')[0].trim().toUpperCase();
+                    var sCodeMatch = stores.find(function(s) { return s.kode_toko.toUpperCase() === possibleCode; });
+                    if (sCodeMatch) storeId = sCodeMatch.kode_toko;
                 }
             }
+            
+            var nama = d.nama ? d.nama.trim() : '';
+            var pin = d.pin ? d.pin.trim() : '';
+            var awb = d.nomor_awb ? d.nomor_awb.trim() : '';
+            var deadlineVal = d.deadline || defaultDeadline;
+            
+            if (nama && pin) {
+                var awbUpper = awb.toUpperCase();
+                
+                if (awbUpper) {
+                    if (awbSet.has(awbUpper) || batchAwbSet.has(awbUpper)) {
+                        duplicatesCount++;
+                        continue;
+                    }
+                    batchAwbSet.add(awbUpper);
+                }
+                
+                window.DB.createPackage({
+                    store_id: storeId,
+                    nama: nama,
+                    nomor_awb: awb,
+                    pin: pin,
+                    invoice: '',
+                    tanggal_masuk: now + 'T00:00:00.000Z',
+                    deadline: deadlineVal + 'T23:59:59.999Z',
+                    urgent: d.urgent,
+                    catatan: 'Bulk Input'
+                });
+                savedCount++;
+            }
         }
+        
         if (savedCount > 0) {
-            window.Utils.showToast(savedCount + ' paket berhasil disimpan', 'success');
+            var msg = savedCount + ' paket berhasil disimpan';
+            if (duplicatesCount > 0) {
+                msg += ' (' + duplicatesCount + ' duplikat dilewati)';
+            }
+            window.Utils.showToast(msg, 'success');
             if (window.AuditLog) window.AuditLog.log('BULK_CREATE', 'package', { count: savedCount });
         } else {
-            window.Utils.showToast('Tidak ada data yang disimpan (Nama & PIN wajib)', 'warning');
+            if (duplicatesCount > 0) {
+                window.Utils.showToast('Gagal menyimpan: ' + duplicatesCount + ' data terdeteksi duplikat', 'danger');
+            } else {
+                window.Utils.showToast('Tidak ada data yang disimpan (Nama & PIN wajib)', 'warning');
+            }
         }
         window.location.hash = '#dashboard';
     },

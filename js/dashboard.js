@@ -3,8 +3,10 @@
 const Dashboard = {
     currentFilter: 'pending',
     searchQuery: '',
+    accordionState: {},
 
     init: function() {
+        this.accordionState = {};
         this.render();
     },
 
@@ -17,9 +19,15 @@ const Dashboard = {
         const urgentPackages = window.DB.getUrgentPackages();
         const needsAlert = urgentPackages.length > 0;
 
+        const cfg = window.SyncEngine ? window.SyncEngine.getConfig() : {};
+        const roleText = cfg.role === 'picker' ? '🛵 Picker' : cfg.role === 'admin' ? '🖥️ Admin' : '📥 Input';
+
         let html = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="font-size: 1.5rem;">Dashboard</h2>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <h2 style="font-size: 1.5rem; margin: 0;">Dashboard</h2>
+                    <span class="badge" style="background: var(--color-surface-2); color: var(--color-text); font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 8px;">${roleText}</span>
+                </div>
                 <button class="btn" style="background-color: var(--color-surface-2); color: white; width: auto; padding: 0.5rem 1rem;" onclick="window.location.hash='#stores'">Kelola Toko</button>
             </div>
         `;
@@ -51,15 +59,15 @@ const Dashboard = {
         // Summary Bar
         html += `
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
-                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem;">
+                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem; cursor: pointer; border: 1px solid ${this.currentFilter === 'all' ? 'var(--color-primary)' : 'transparent'};" onclick="Dashboard.setFilter('all')">
                     <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">${stats.totalPackages}</div>
                     <div style="font-size: 0.75rem; color: var(--color-text-muted);">Total</div>
                 </div>
-                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem;">
+                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem; cursor: pointer; border: 1px solid ${this.currentFilter === 'pending' ? 'var(--color-warning)' : 'transparent'};" onclick="Dashboard.setFilter('pending')">
                     <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-warning);">${stats.pendingCount}</div>
                     <div style="font-size: 0.75rem; color: var(--color-text-muted);">Pending</div>
                 </div>
-                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem;">
+                <div class="card glassmorphism" style="text-align: center; padding: 0.75rem; cursor: pointer; border: 1px solid ${this.currentFilter === 'urgent' ? 'var(--color-urgent)' : 'transparent'};" onclick="Dashboard.setFilter('urgent')">
                     <div style="font-size: 1.5rem; font-weight: 700; color: var(--color-urgent);">${stats.urgentCount}</div>
                     <div style="font-size: 0.75rem; color: var(--color-text-muted);">Urgent</div>
                 </div>
@@ -128,6 +136,22 @@ const Dashboard = {
         this.render(); // Re-render everything to update active tab style
     },
 
+    toggleAccordion: function(storeId) {
+        const content = document.getElementById('acc-content-' + storeId);
+        const icon = document.getElementById('acc-icon-' + storeId);
+        if (!content) return;
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'flex';
+            if (icon) icon.innerText = '▲';
+            this.accordionState[storeId] = true;
+        } else {
+            content.style.display = 'none';
+            if (icon) icon.innerText = '▼';
+            this.accordionState[storeId] = false;
+        }
+    },
+
     renderPackageList: function() {
         const container = document.getElementById('dashboard-package-list');
         if (!container) return;
@@ -163,6 +187,14 @@ const Dashboard = {
             }
         }
 
+        // Apply daily reset filter (only pending, or picked_up/returned today)
+        const todayStr = new Date().toISOString().split('T')[0];
+        packages = packages.filter(p => {
+            if (p.status === 'pending') return true;
+            if (!p.tanggal_pickup) return false;
+            return p.tanggal_pickup.split('T')[0] === todayStr;
+        });
+
         if (packages.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-muted);">
@@ -186,10 +218,12 @@ const Dashboard = {
         });
 
         let html = '';
+        var idx = 0;
         
         for (const [storeId, pkgs] of Object.entries(grouped)) {
             const store = storeMap[storeId];
-            const storeName = store ? store.nama_toko : 'Toko Tidak Diketahui';
+            const storeCodeLabel = store ? ' (' + store.kode_toko + ')' : '';
+            const storeName = store ? store.nama_toko + storeCodeLabel : 'Toko Tidak Diketahui';
             
             // Sort packages within store if not already sorted by pending (pending is pre-sorted)
             if (this.currentFilter !== 'pending' && this.currentFilter !== 'urgent') {
@@ -201,13 +235,27 @@ const Dashboard = {
                 });
             }
 
+            // Accordion expand/collapse state
+            let isExpanded = false;
+            if (this.accordionState[storeId] !== undefined) {
+                isExpanded = this.accordionState[storeId];
+            } else if (idx === 0) {
+                isExpanded = true;
+                this.accordionState[storeId] = true;
+            }
+
             html += `
-                <div style="margin-bottom: 1.5rem;" class="fadeIn">
-                    <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem;">
-                        <span>🏪</span> ${storeName}
-                        <span class="badge" style="background-color: var(--color-surface-2); color: var(--color-text-muted);">${pkgs.length}</span>
+                <div style="margin-bottom: 0.75rem;" class="fadeIn">
+                    <h3 class="accordion-header" onclick="Dashboard.toggleAccordion('${storeId}')" 
+                        style="font-size: 1rem; margin: 0; padding: 0.75rem; background: var(--color-surface-2); border-radius: var(--radius); cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span>🏪</span> ${storeName}
+                            <span class="badge" style="background-color: var(--color-primary); color: white;">${pkgs.length}</span>
+                        </div>
+                        <span class="accordion-icon" id="acc-icon-${storeId}" style="font-size: 0.8rem;">${isExpanded ? '▲' : '▼'}</span>
                     </h3>
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div class="accordion-content" id="acc-content-${storeId}" 
+                        style="display: ${isExpanded ? 'flex' : 'none'}; flex-direction: column; gap: 0.75rem; padding: 0.75rem 0.5rem 0 0.5rem;">
             `;
 
             pkgs.forEach(p => {
@@ -254,6 +302,7 @@ const Dashboard = {
             });
 
             html += `</div></div>`;
+            idx++;
         }
 
         container.innerHTML = html;

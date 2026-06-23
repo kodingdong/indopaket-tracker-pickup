@@ -79,8 +79,10 @@ const DB = {
     },
 
     // --- Store CRUD ---
-    getAllStores: function() {
-        return this._getAll(DB_KEYS.STORES);
+    getAllStores: function(includeDeleted) {
+        var items = this._getAll(DB_KEYS.STORES);
+        if (includeDeleted) return items;
+        return items.filter(s => !s._deleted);
     },
     
     getStoreByKode: function(kode_toko) {
@@ -101,8 +103,10 @@ const DB = {
     },
 
     // --- Package CRUD ---
-    getAllPackages: function() {
-        return this._getAll(DB_KEYS.PACKAGES);
+    getAllPackages: function(includeDeleted) {
+        var items = this._getAll(DB_KEYS.PACKAGES);
+        if (includeDeleted) return items;
+        return items.filter(p => !p._deleted);
     },
 
     getPackagesByStore: function(kodeToko) {
@@ -160,7 +164,8 @@ const DB = {
 
     markAsReturned: function(id) {
         return this.updatePackage(id, {
-            status: 'returned'
+            status: 'returned',
+            tanggal_pickup: new Date().toISOString()
         });
     },
 
@@ -181,8 +186,10 @@ const DB = {
     },
 
     // --- Trip CRUD ---
-    getAllTrips: function() {
-        return this._getAll(DB_KEYS.TRIPS);
+    getAllTrips: function(includeDeleted) {
+        var items = this._getAll(DB_KEYS.TRIPS);
+        if (includeDeleted) return items;
+        return items.filter(t => !t._deleted);
     },
 
     createTrip: function(tripData) {
