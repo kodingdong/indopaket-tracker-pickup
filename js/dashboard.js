@@ -4,9 +4,13 @@ const Dashboard = {
     currentFilter: 'pending',
     searchQuery: '',
     accordionState: {},
+    bulkMode: false,
+    selectedPackages: new Set(),
 
     init: function() {
         this.accordionState = {};
+        this.bulkMode = false;
+        this.selectedPackages.clear();
         this.render();
     },
 
@@ -106,6 +110,29 @@ const Dashboard = {
         });
         tabsHtml += `</div>`;
         html += tabsHtml;
+
+        // Search & Bulk Action Header
+        html += `
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <input type="text" id="dashboard-search" class="input" placeholder="Cari paket / AWB..." value="${this.searchQuery}" 
+                    style="flex: 1; padding: 0.5rem; border-radius: var(--radius); border: 1px solid var(--color-surface-2); background: var(--color-bg); color: var(--color-text);">
+                <button class="btn" style="width: auto; padding: 0.5rem 1rem; background-color: ${this.bulkMode ? 'var(--color-primary)' : 'var(--color-surface-2)'}; color: ${this.bulkMode ? 'white' : 'var(--color-text)'};" onclick="Dashboard.toggleBulkMode()">
+                    ${this.bulkMode ? 'Batal Bulk' : 'Pilih Banyak'}
+                </button>
+            </div>
+        `;
+        
+        if (this.bulkMode && this.selectedPackages.size > 0) {
+            html += `
+            <div class="card glassmorphism" style="position: sticky; top: 10px; z-index: 90; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--color-primary);">
+                <div><strong>${this.selectedPackages.size}</strong> paket</div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" style="background-color: var(--color-success); padding: 0.5rem 1rem; width: auto;" onclick="Dashboard.bulkAction('pickup')">Ambil</button>
+                    <button class="btn badge-danger" style="border: none; padding: 0.5rem 1rem; width: auto;" onclick="Dashboard.bulkAction('delete')">Hapus</button>
+                </div>
+            </div>
+            `;
+        }
 
         // Package List Container
         html += `<div id="dashboard-package-list"></div>`;
@@ -254,8 +281,8 @@ const Dashboard = {
                         </div>
                         <span class="accordion-icon" id="acc-icon-${storeId}" style="font-size: 0.8rem;">${isExpanded ? '▲' : '▼'}</span>
                     </h3>
-                    <div class="accordion-content" id="acc-content-${storeId}" 
-                        style="display: ${isExpanded ? 'flex' : 'none'}; flex-direction: column; gap: 0.75rem; padding: 0.75rem 0.5rem 0 0.5rem;">
+                    <div class="accordion-content store-carousel" id="acc-content-${storeId}" 
+                        style="display: ${isExpanded ? 'flex' : 'none'};">
             `;
 
             pkgs.forEach(p => {
@@ -276,18 +303,28 @@ const Dashboard = {
                     statusText = window.Utils.getDeadlineStatus(daysRemaining);
                 }
 
+                let cardClickAction = this.bulkMode ? `Dashboard.toggleSelect('${p.id}')` : `window.location.hash='#package-detail?id=${p.id}'`;
+                let isSelected = this.selectedPackages.has(p.id);
+                let outlineStyle = isSelected ? 'outline: 2px solid var(--color-primary);' : '';
+
                 html += `
-                    <div class="card glassmorphism" style="margin-bottom: 0; cursor: pointer; padding: 1rem; border-left: 3px solid var(--color-${statusClass}); transition: transform 0.2s;" onclick="window.location.hash='#package-detail?id=${p.id}'">
+                    <div class="card glassmorphism" style="margin-bottom: 0; cursor: pointer; padding: 1rem; border-left: 3px solid var(--color-${statusClass}); transition: transform 0.2s; ${outlineStyle}" onclick="${cardClickAction}">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                            <h4 style="font-size: 1rem; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${p.nama}</h4>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                ${this.bulkMode ? `<input type="checkbox" ${isSelected ? 'checked' : ''} style="pointer-events: none; width: 1.2rem; height: 1.2rem;" />` : ''}
+                                <h4 style="font-size: 1rem; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${p.nama}</h4>
+                            </div>
                             <span class="badge badge-${statusClass}" style="white-space: nowrap;">${statusText}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
                                 <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">AWB: ${p.nomor_awb || '-'}</p>
                                 <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.5rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${p.pin}</span></p>
-                                <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;">
-                                    <canvas id="barcode-dash-${p.id}" style="height: 30px;"></canvas>
+                                <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;" onclick="event.stopPropagation(); Dashboard.toggleBlur(this)">
+                                    <canvas id="barcode-dash-${p.id}" class="barcode-blurred" style="height: 30px;"></canvas>
+                                </div>
+                                <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block; margin-left: 0.25rem;" onclick="event.stopPropagation(); Dashboard.toggleBlur(this)">
+                                    <canvas id="barcode-pin-dash-${p.id}" class="barcode-blurred" style="height: 30px;"></canvas>
                                 </div>
                             </div>
                             ${p.status === 'pending' ? `
@@ -301,7 +338,9 @@ const Dashboard = {
                 `;
             });
 
-            html += `</div></div>`;
+            html += `</div>`;
+            html += `<div class="carousel-dots" id="dots-${storeId}" style="text-align:center; padding:0.5rem 0;"></div>`;
+            html += `</div>`;
             idx++;
         }
 
@@ -314,9 +353,96 @@ const Dashboard = {
                     if (p.nomor_awb) {
                         window.Barcode.generateBarcode(p.nomor_awb, `barcode-dash-${p.id}`);
                     }
+                    if (p.pin) {
+                        window.Barcode.generateBarcode(p.pin, `barcode-pin-dash-${p.id}`);
+                    }
                 });
+                for (const storeId of Object.keys(grouped)) {
+                    Dashboard.initCarouselDots(storeId, grouped[storeId].length);
+                }
             }, 50);
         }
+    },
+
+    initCarouselDots: function(storeId, count) {
+        var dotsEl = document.getElementById('dots-' + storeId);
+        var carousel = document.getElementById('acc-content-' + storeId);
+        if (!dotsEl || !carousel || count <= 1) return;
+        
+        var dotsHtml = '';
+        for (var i = 0; i < count; i++) {
+            dotsHtml += '<span class="carousel-dot' + (i === 0 ? ' active' : '') + '"></span>';
+        }
+        dotsEl.innerHTML = dotsHtml;
+        
+        carousel.addEventListener('scroll', function() {
+            var scrollLeft = carousel.scrollLeft;
+            var cardWidth = carousel.children[0] ? carousel.children[0].offsetWidth + 12 : 1;
+            var activeIdx = Math.round(scrollLeft / cardWidth);
+            var dots = dotsEl.querySelectorAll('.carousel-dot');
+            dots.forEach(function(d, i) {
+                d.classList.toggle('active', i === activeIdx);
+            });
+        });
+    },
+
+    toggleBulkMode: function() {
+        this.bulkMode = !this.bulkMode;
+        if (!this.bulkMode) this.selectedPackages.clear();
+        this.render();
+    },
+
+    toggleSelect: function(id) {
+        if (this.selectedPackages.has(id)) {
+            this.selectedPackages.delete(id);
+        } else {
+            this.selectedPackages.add(id);
+        }
+        this.render();
+    },
+
+    toggleBlur: function(containerElement) {
+        var canvas = containerElement.querySelector('canvas');
+        if (canvas) {
+            if (canvas.classList.contains('barcode-blurred')) {
+                canvas.classList.remove('barcode-blurred');
+                canvas.classList.add('barcode-revealed');
+            } else {
+                canvas.classList.remove('barcode-revealed');
+                canvas.classList.add('barcode-blurred');
+            }
+        }
+    },
+
+    bulkAction: function(action) {
+        if (this.selectedPackages.size === 0) return;
+        var msg = action === 'delete' ? 'Hapus permanen ' + this.selectedPackages.size + ' paket?' : 'Tandai ' + this.selectedPackages.size + ' paket sudah diambil?';
+        var type = action === 'delete' ? 'danger' : 'primary';
+        
+        window.Utils.showConfirm({
+            title: action === 'delete' ? '🗑️ Hapus Massal' : '📦 Ambil Massal',
+            message: msg,
+            type: type,
+            confirmText: 'Ya, Lanjutkan',
+            cancelText: 'Batal',
+            onConfirm: () => {
+                const ids = Array.from(this.selectedPackages);
+                ids.forEach(id => {
+                    var pkg = window.DB._getById('paket_packages', id);
+                    if (action === 'delete') {
+                        window.DB.deletePackage(id);
+                        if (window.AuditLog) window.AuditLog.log('DELETE_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '', note: 'Bulk' });
+                    } else {
+                        window.DB.markAsPickedUp(id);
+                        if (window.AuditLog) window.AuditLog.log('PICKUP_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '', note: 'Bulk' });
+                    }
+                });
+                window.Utils.showToast(this.selectedPackages.size + ' paket berhasil diproses', 'success');
+                this.bulkMode = false;
+                this.selectedPackages.clear();
+                this.render();
+            }
+        });
     }
 };
 
