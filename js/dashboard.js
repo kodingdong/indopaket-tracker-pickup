@@ -289,6 +289,9 @@ const Dashboard = {
                                 <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;">
                                     <canvas id="barcode-dash-${p.id}" style="height: 30px;"></canvas>
                                 </div>
+                                <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block; margin-left: 0.25rem;">
+                                    <canvas id="barcode-pin-dash-${p.id}" style="height: 30px;"></canvas>
+                                </div>
                             </div>
                             ${p.status === 'pending' ? `
                             <div style="text-align: right;">
@@ -313,6 +316,9 @@ const Dashboard = {
                 packages.forEach(p => {
                     if (p.nomor_awb) {
                         window.Barcode.generateBarcode(p.nomor_awb, `barcode-dash-${p.id}`);
+                    }
+                    if (p.pin) {
+                        window.Barcode.generateBarcode(p.pin, `barcode-pin-dash-${p.id}`);
                     }
                 });
             }, 50);

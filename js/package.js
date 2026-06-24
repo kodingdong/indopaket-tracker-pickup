@@ -228,6 +228,9 @@ const Package = {
                 <div style="background-color: var(--color-surface-2); padding: 1.5rem; border-radius: var(--radius); text-align: center; margin-bottom: 1.5rem;">
                     <p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">KODE PIN</p>
                     <div style="font-size: 48px; font-weight: 700; letter-spacing: 4px; color: var(--color-primary);">${pkg.pin}</div>
+                    <div style="margin-top: 0.75rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block;">
+                        <canvas id="barcode-pin-detail-${pkg.id}"></canvas>
+                    </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
@@ -276,6 +279,7 @@ const Package = {
         if (pkg.nomor_awb && window.Barcode) {
             setTimeout(() => {
                 window.Barcode.generateBarcode(pkg.nomor_awb, `barcode-detail-${pkg.id}`);
+                if (pkg.pin) window.Barcode.generateBarcode(pkg.pin, `barcode-pin-detail-${pkg.id}`);
             }, 50);
         }
     },

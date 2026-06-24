@@ -147,6 +147,9 @@ const Pickup = {
                             <div style="margin-top: 0.5rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block;">
                                 <canvas id="barcode-pickup-${p.id}"></canvas>
                             </div>
+                            <div style="margin-top: 0.5rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block; margin-left: 0.5rem;">
+                                <canvas id="barcode-pin-pickup-${p.id}"></canvas>
+                            </div>
                         </div>
 
                         ${(!isPickedUp) ? `
@@ -174,6 +177,9 @@ const Pickup = {
                 this.tripPackages.forEach(p => {
                     if (p.nomor_awb) {
                         window.Barcode.generateBarcode(p.nomor_awb, `barcode-pickup-${p.id}`);
+                    }
+                    if (p.pin) {
+                        window.Barcode.generateBarcode(p.pin, `barcode-pin-pickup-${p.id}`);
                     }
                 });
             }, 50);
