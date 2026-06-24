@@ -397,3 +397,40 @@ body {
     background: var(--color-danger);
     color: #fff;
 }
+
+/* Horizontal Swipe Carousel per Store */
+.store-carousel {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0.75rem 0.5rem 0.75rem 0.5rem;
+}
+
+.store-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.store-carousel > .card {
+    flex: 0 0 85%;
+    scroll-snap-align: start;
+    min-width: 260px;
+    margin-bottom: 0;
+}
+
+.carousel-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-surface-2);
+    margin: 0 3px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.carousel-dot.active {
+    background: var(--color-primary);
+    transform: scale(1.3);
+}
