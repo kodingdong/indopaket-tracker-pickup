@@ -151,8 +151,8 @@ const OCR = {
                 var awbMatch = text.match(/\bOR\d{13}\b/i) || text.match(/\b(?:IDP|SPX|JNT|JP|JX)[A-Z0-9]{5,20}\b/i) || text.match(/\b(?=[A-Z0-9]*\d)[A-Z0-9]{10,25}\b/i);
                 var awb = awbMatch ? awbMatch[0].toUpperCase() : '';
                 
-                // Extract PIN: Priority 1: 6 chars mix letters & digits, Priority 2: any 6 digits
-                var pinMatch = text.match(/\b(?=[A-Z0-9]*[A-Z])(?=[A-Z0-9]*\d)[A-Z0-9]{6}\b/i) || text.match(/\b\d{6}\b/i);
+                // Extract PIN: 6 alphanumeric chars
+                var pinMatch = text.match(/\b[A-Z0-9]{6}\b/i);
                 var pin = pinMatch ? pinMatch[0].toUpperCase() : '';
 
                 // Extract Deadline from "Diperbarui Aktif" (e.g. "05-Jun-2026")
@@ -353,8 +353,8 @@ const OCR = {
                 }
             }
 
-            // 2. Extract PIN (6 alphanumeric chars, preferably with letters and digits mixed)
-            var pinRegex = /\b(?=[A-Z0-9]*[A-Z])(?=[A-Z0-9]*\d)[A-Z0-9]{6}\b/i;
+            // 2. Extract PIN (6 alphanumeric chars)
+            var pinRegex = /\b[A-Z0-9]{6}\b/i;
             var pinMatch = nama.match(pinRegex);
             if (!pinMatch) {
                 // Fallback to any 6 alphanumeric if no mixed found, take from the end of string
