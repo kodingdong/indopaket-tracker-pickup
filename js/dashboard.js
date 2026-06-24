@@ -254,8 +254,8 @@ const Dashboard = {
                         </div>
                         <span class="accordion-icon" id="acc-icon-${storeId}" style="font-size: 0.8rem;">${isExpanded ? '▲' : '▼'}</span>
                     </h3>
-                    <div class="accordion-content" id="acc-content-${storeId}" 
-                        style="display: ${isExpanded ? 'flex' : 'none'}; flex-direction: column; gap: 0.75rem; padding: 0.75rem 0.5rem 0 0.5rem;">
+                    <div class="accordion-content store-carousel" id="acc-content-${storeId}" 
+                        style="display: ${isExpanded ? 'flex' : 'none'};">
             `;
 
             pkgs.forEach(p => {
@@ -304,7 +304,9 @@ const Dashboard = {
                 `;
             });
 
-            html += `</div></div>`;
+            html += `</div>`;
+            html += `<div class="carousel-dots" id="dots-${storeId}" style="text-align:center; padding:0.5rem 0;"></div>`;
+            html += `</div>`;
             idx++;
         }
 
@@ -321,8 +323,33 @@ const Dashboard = {
                         window.Barcode.generateBarcode(p.pin, `barcode-pin-dash-${p.id}`);
                     }
                 });
+                for (const storeId of Object.keys(grouped)) {
+                    Dashboard.initCarouselDots(storeId, grouped[storeId].length);
+                }
             }, 50);
         }
+    },
+
+    initCarouselDots: function(storeId, count) {
+        var dotsEl = document.getElementById('dots-' + storeId);
+        var carousel = document.getElementById('acc-content-' + storeId);
+        if (!dotsEl || !carousel || count <= 1) return;
+        
+        var dotsHtml = '';
+        for (var i = 0; i < count; i++) {
+            dotsHtml += '<span class="carousel-dot' + (i === 0 ? ' active' : '') + '"></span>';
+        }
+        dotsEl.innerHTML = dotsHtml;
+        
+        carousel.addEventListener('scroll', function() {
+            var scrollLeft = carousel.scrollLeft;
+            var cardWidth = carousel.children[0] ? carousel.children[0].offsetWidth + 12 : 1;
+            var activeIdx = Math.round(scrollLeft / cardWidth);
+            var dots = dotsEl.querySelectorAll('.carousel-dot');
+            dots.forEach(function(d, i) {
+                d.classList.toggle('active', i === activeIdx);
+            });
+        });
     }
 };
 
