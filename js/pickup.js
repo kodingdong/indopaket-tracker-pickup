@@ -27,9 +27,9 @@ const Pickup = {
         this.currentTripId = tripId;
         
         // Fetch full package objects
+        const allPackages = window.DB.getAllPackages();
         this.tripPackages = trip.packages.map(id => {
-            const all = window.DB.getAllPackages();
-            return all.find(p => p.id === id);
+            return allPackages.find(p => p.id === id);
         }).filter(p => p !== undefined);
 
         // Render skeleton only if not already rendered for this trip

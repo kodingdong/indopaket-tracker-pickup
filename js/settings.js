@@ -252,7 +252,7 @@ const Settings = {
                     '"' + (p.status || '') + '"',
                     '"' + (p.tanggal_masuk || '') + '"',
                     '"' + (p.deadline || '') + '"',
-                    '"' + (p.is_urgent ? 'Ya' : 'Tidak') + '"'
+                    '"' + (p.urgent ? 'Ya' : 'Tidak') + '"'
                 ].join(','));
             });
 

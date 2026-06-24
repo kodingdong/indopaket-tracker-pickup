@@ -281,23 +281,36 @@ const Package = {
     },
 
     handleMarkPickedUp: function(id) {
-        if (confirm('Tandai paket ini sudah diambil?')) {
-            var pkg = window.DB._getById('paket_packages', id);
-            window.DB.markAsPickedUp(id);
-            window.Utils.showToast('Status paket diperbarui', 'success');
-            if (window.AuditLog) window.AuditLog.log('PICKUP_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '' });
-            window.history.back();
-        }
+        window.Utils.showConfirm({
+            title: '📦 Tandai Diambil',
+            message: 'Tandai paket ini sudah diambil?',
+            confirmText: 'Ya, Diambil',
+            cancelText: 'Batal',
+            onConfirm: function() {
+                var pkg = window.DB._getById('paket_packages', id);
+                window.DB.markAsPickedUp(id);
+                window.Utils.showToast('Status paket diperbarui', 'success');
+                if (window.AuditLog) window.AuditLog.log('PICKUP_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '' });
+                window.history.back();
+            }
+        });
     },
 
     handleDelete: function(id) {
-        if (confirm('Hapus paket ini secara permanen?')) {
-            var pkg = window.DB._getById('paket_packages', id);
-            window.DB.deletePackage(id);
-            window.Utils.showToast('Paket dihapus', 'success');
-            if (window.AuditLog) window.AuditLog.log('DELETE_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '' });
-            window.history.back();
-        }
+        window.Utils.showConfirm({
+            title: '🗑️ Hapus Paket',
+            message: 'Hapus paket ini secara permanen?',
+            confirmText: 'Hapus',
+            cancelText: 'Batal',
+            type: 'danger',
+            onConfirm: function() {
+                var pkg = window.DB._getById('paket_packages', id);
+                window.DB.deletePackage(id);
+                window.Utils.showToast('Paket dihapus', 'success');
+                if (window.AuditLog) window.AuditLog.log('DELETE_PACKAGE', 'package', { nama: pkg ? pkg.nama : '', nomor_awb: pkg ? pkg.nomor_awb : '' });
+                window.history.back();
+            }
+        });
     }
 };
 
