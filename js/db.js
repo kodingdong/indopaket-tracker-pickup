@@ -79,8 +79,10 @@ const DB = {
     },
 
     // --- Store CRUD ---
-    getAllStores: function() {
-        return this._getAll(DB_KEYS.STORES);
+    getAllStores: function(includeDeleted) {
+        var items = this._getAll(DB_KEYS.STORES);
+        if (includeDeleted) return items;
+        return items.filter(s => !s._deleted);
     },
     
     getStoreByKode: function(kode_toko) {
@@ -101,13 +103,15 @@ const DB = {
     },
 
     // --- Package CRUD ---
-    getAllPackages: function() {
-        return this._getAll(DB_KEYS.PACKAGES);
+    getAllPackages: function(includeDeleted) {
+        var items = this._getAll(DB_KEYS.PACKAGES);
+        if (includeDeleted) return items;
+        return items.filter(p => !p._deleted);
     },
 
-    getPackagesByStore: function(storeId) {
+    getPackagesByStore: function(kodeToko) {
         const pkgs = this.getAllPackages();
-        return pkgs.filter(p => p.store_id === storeId);
+        return pkgs.filter(p => p.store_id === kodeToko);
     },
 
     getPackagesByStatus: function(status) {
@@ -160,7 +164,8 @@ const DB = {
 
     markAsReturned: function(id) {
         return this.updatePackage(id, {
-            status: 'returned'
+            status: 'returned',
+            tanggal_pickup: new Date().toISOString()
         });
     },
 
@@ -181,8 +186,10 @@ const DB = {
     },
 
     // --- Trip CRUD ---
-    getAllTrips: function() {
-        return this._getAll(DB_KEYS.TRIPS);
+    getAllTrips: function(includeDeleted) {
+        var items = this._getAll(DB_KEYS.TRIPS);
+        if (includeDeleted) return items;
+        return items.filter(t => !t._deleted);
     },
 
     createTrip: function(tripData) {
@@ -211,7 +218,7 @@ const DB = {
         
         let storeStats = {};
         stores.forEach(s => {
-            storeStats[s.id] = { store_name: s.nama_toko, count: 0 };
+            storeStats[s.kode_toko] = { store_name: s.nama_toko, count: 0 };
         });
 
         pkgs.forEach(p => {
@@ -340,4 +347,44 @@ window.DB_KEYS = DB_KEYS;
             console.log('[DB Migration] Moved ' + m.from + ' → ' + m.to);
         }
     });
+})();
+
+// --- Data Migration: store_id internal ID → kode_toko ---
+// Converts package store_id from random internal IDs to human-readable kode_toko
+(function migrateStoreIdToKodeToko() {
+    var MIGRATION_KEY = 'paket_migration_store_id_to_kode';
+    if (localStorage.getItem(MIGRATION_KEY)) return; // Already migrated
+
+    try {
+        var storesRaw = localStorage.getItem('paket_stores');
+        var packagesRaw = localStorage.getItem('paket_packages');
+        if (!storesRaw || !packagesRaw) {
+            localStorage.setItem(MIGRATION_KEY, 'done');
+            return;
+        }
+
+        var stores = JSON.parse(storesRaw);
+        var packages = JSON.parse(packagesRaw);
+        var storeIdToKode = {};
+        stores.forEach(function(s) {
+            if (s.id && s.kode_toko) storeIdToKode[s.id] = s.kode_toko;
+        });
+
+        var changed = false;
+        packages.forEach(function(p) {
+            if (p.store_id && storeIdToKode[p.store_id]) {
+                p.store_id = storeIdToKode[p.store_id];
+                p._synced = false; // Mark for re-sync
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            localStorage.setItem('paket_packages', JSON.stringify(packages));
+            console.log('[DB Migration] Converted store_id from internal ID to kode_toko');
+        }
+        localStorage.setItem(MIGRATION_KEY, 'done');
+    } catch (e) {
+        console.error('[DB Migration] store_id migration error:', e);
+    }
 })();

@@ -12,7 +12,7 @@ const Store = {
 
         let html = '';
         stores.forEach(s => {
-            const pkgs = window.DB.getPackagesByStore(s.id);
+            const pkgs = window.DB.getPackagesByStore(s.kode_toko);
             const activePkgs = pkgs.filter(p => p.status === 'pending').length;
             
             html += `

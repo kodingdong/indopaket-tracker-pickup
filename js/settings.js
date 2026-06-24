@@ -26,9 +26,9 @@ const Settings = {
                 <div class="form-group" style="margin-bottom:0;">
                     <label style="font-size:0.85rem;color:var(--color-text-muted);">Role</label>
                     <select class="input" id="settings-device-role">
-                        <option value="input" ${cfg.role === 'input' ? 'selected' : ''}>📥 Input (Istri)</option>
-                        <option value="picker" ${cfg.role === 'picker' ? 'selected' : ''}>🛵 Picker (Suami)</option>
-                        <option value="admin" ${cfg.role === 'admin' ? 'selected' : ''}>🖥️ Admin (Laptop/PC)</option>
+                        <option value="input" ${cfg.role === 'input' ? 'selected' : ''}>📥 Input</option>
+                        <option value="picker" ${cfg.role === 'picker' ? 'selected' : ''}>🛵 Picker</option>
+                        <option value="admin" ${cfg.role === 'admin' ? 'selected' : ''}>🖥️ Admin</option>
                     </select>
                 </div>
             </div>
@@ -221,7 +221,7 @@ const Settings = {
     // --- Export ---
     exportJSON: function() {
         try {
-            var data = { stores: window.DB.getAllStores(), packages: window.DB.getAllPackages(), trips: window.DB.getAllTrips(), exportDate: new Date().toISOString() };
+            var data = { stores: window.DB.getAllStores(true), packages: window.DB.getAllPackages(true), trips: window.DB.getAllTrips(true), exportDate: new Date().toISOString() };
             var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
@@ -239,7 +239,7 @@ const Settings = {
             var pkgs = window.DB.getAllPackages();
             var stores = window.DB.getAllStores();
             var storeMap = {};
-            stores.forEach(function(s) { storeMap[s.id] = s.kode_toko || s.nama_toko || ''; });
+            stores.forEach(function(s) { storeMap[s.kode_toko] = s.kode_toko || s.nama_toko || ''; });
 
             var rows = [['Nama', 'AWB', 'PIN', 'Toko', 'Status', 'Tanggal Masuk', 'Deadline', 'Urgent'].join(',')];
             pkgs.forEach(function(p) {
@@ -252,7 +252,7 @@ const Settings = {
                     '"' + (p.status || '') + '"',
                     '"' + (p.tanggal_masuk || '') + '"',
                     '"' + (p.deadline || '') + '"',
-                    '"' + (p.is_urgent ? 'Ya' : 'Tidak') + '"'
+                    '"' + (p.urgent ? 'Ya' : 'Tidak') + '"'
                 ].join(','));
             });
 

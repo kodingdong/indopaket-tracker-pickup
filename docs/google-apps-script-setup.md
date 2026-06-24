@@ -39,6 +39,10 @@ Ketik headers ini di **Row 1**:
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | id | store_id | nama | nomor_awb | pin | invoice | status | is_urgent | tanggal_masuk | deadline | tanggal_pickup | catatan | created_at | updated_at | _deleted | _last_modified_by |
 
+> 💡 **Catatan `store_id`**: Kolom `store_id` berisi **kode toko** (misal `T1AB`, `TJON`), **bukan** ID internal random.
+> Ini agar data di spreadsheet mudah dibaca dan dipahami.
+> Nilai `store_id` harus sama persis dengan `kode_toko` di sheet `stores`.
+
 ### Tab 3: `trips`
 Ketik headers ini di **Row 1**:
 
@@ -188,6 +192,11 @@ Lakukan di **KEDUA HP** (istri & suami):
 ### ⚠️ Setelah update kode Apps Script
 → Harus buat **New deployment** lagi (Deploy → New deployment)
 → URL deployment BERUBAH — harus update di Settings app di kedua HP
+
+### ⚠️ `store_id` berisi kode aneh (random ID)
+→ Mulai versi **v1.0.4**, `store_id` otomatis berisi **kode toko** (misal `T1AB`)
+→ Jika data lama masih berisi ID random (misal `mqkv0ncx8sagnqmt`), lakukan **Force Push** dari Settings → Sync Actions di aplikasi
+→ Migrasi otomatis berjalan saat aplikasi dibuka, kemudian Force Push untuk update cloud
 
 ---
 

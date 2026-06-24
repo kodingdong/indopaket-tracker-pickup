@@ -46,6 +46,15 @@ const App = {
             queryParams = new URLSearchParams(parts[1]);
         }
 
+        // If trying to go to trip planner but there's an active trip, redirect to pickup view
+        if (basePath === '#trip' && window.DB) {
+            const activeTrip = window.DB.getAllTrips().find(t => t.status === 'active');
+            if (activeTrip) {
+                window.location.hash = '#pickup?trip_id=' + activeTrip.id;
+                return;
+            }
+        }
+
         const viewMap = {
             '#dashboard': 'view-dashboard',
             '#add': 'view-add',
@@ -60,6 +69,18 @@ const App = {
 
         const targetId = viewMap[basePath];
         if (!targetId) return;
+
+        // Stop scanner if leaving pickup view
+        if (window.Barcode && window.Barcode.scanner && basePath !== '#pickup') {
+            window.Barcode.stopScanner();
+            if (window.Pickup) {
+                window.Pickup.renderedTripId = null; // force header re-render next time
+                const btn = document.getElementById('btn-toggle-scanner');
+                if (btn) btn.innerHTML = '📷 Scan';
+                const container = document.getElementById('pickup-scanner-container');
+                if (container) container.style.display = 'none';
+            }
+        }
 
         // Hide all views
         document.querySelectorAll('.view').forEach(view => {

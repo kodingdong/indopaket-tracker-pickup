@@ -63,6 +63,42 @@ const Utils = {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    },
+    
+    showConfirm: function(options) {
+        var overlay = document.createElement('div');
+        overlay.className = 'confirm-overlay';
+        
+        var btnClass = options.type === 'danger' ? 'confirm-btn-danger' : 'confirm-btn-ok';
+        
+        overlay.innerHTML = 
+            '<div class="confirm-dialog">' +
+                '<div class="confirm-dialog-title">' + (options.title || 'Konfirmasi') + '</div>' +
+                '<div class="confirm-dialog-message">' + (options.message || 'Apakah Anda yakin?') + '</div>' +
+                '<div class="confirm-dialog-actions">' +
+                    '<button class="confirm-btn-cancel" id="confirm-cancel-btn">' + (options.cancelText || 'Batal') + '</button>' +
+                    '<button class="' + btnClass + '" id="confirm-ok-btn">' + (options.confirmText || 'OK') + '</button>' +
+                '</div>' +
+            '</div>';
+        
+        document.body.appendChild(overlay);
+        
+        overlay.querySelector('#confirm-ok-btn').addEventListener('click', function() {
+            overlay.remove();
+            if (options.onConfirm) options.onConfirm();
+        });
+        
+        overlay.querySelector('#confirm-cancel-btn').addEventListener('click', function() {
+            overlay.remove();
+            if (options.onCancel) options.onCancel();
+        });
+        
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                overlay.remove();
+                if (options.onCancel) options.onCancel();
+            }
+        });
     }
 };
 

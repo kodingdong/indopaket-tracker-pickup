@@ -10,7 +10,7 @@ const Trip = {
         let pkgs = window.DB.getPendingPackages();
         const stores = window.DB.getAllStores();
         const storeMap = {};
-        stores.forEach(s => storeMap[s.id] = s);
+        stores.forEach(s => storeMap[s.kode_toko] = s);
 
         // Group by store
         const grouped = {};

@@ -4,6 +4,9 @@ const Pickup = {
     currentTripId: null,
     tripPackages: [],
     skippedPackages: new Set(),
+    renderedTripId: null,
+    _lastScannedAWB: null,
+    _lastScanTime: 0,
     
     render: function(tripId) {
         const container = document.getElementById('view-pickup');
@@ -24,17 +27,45 @@ const Pickup = {
         this.currentTripId = tripId;
         
         // Fetch full package objects
+        const allPackages = window.DB.getAllPackages();
         this.tripPackages = trip.packages.map(id => {
-            const all = window.DB.getAllPackages();
-            return all.find(p => p.id === id);
+            return allPackages.find(p => p.id === id);
         }).filter(p => p !== undefined);
+
+        // Render skeleton only if not already rendered for this trip
+        if (!document.getElementById('pickup-header') || this.renderedTripId !== tripId) {
+            this.renderedTripId = tripId;
+            // Stop scanner if active from previous trip/view
+            if (window.Barcode) window.Barcode.stopScanner();
+            
+            container.innerHTML = `
+                <div id="pickup-header" style="position: sticky; top: 0; background: var(--color-bg); z-index: 10; padding: 1rem 0; margin-bottom: 1rem; border-bottom: 1px solid var(--color-surface-2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <h2 style="font-size: 1.5rem; margin: 0;">Mode Pickup</h2>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn" id="btn-toggle-scanner" style="background-color: var(--color-primary); color: white; padding: 0.5rem 1rem; width: auto;" onclick="Pickup.toggleScanner()">📷 Scan</button>
+                            <button class="btn" id="btn-complete-trip" style="color: white; padding: 0.5rem 1rem; width: auto;" onclick="Pickup.handleCompleteTrip()">
+                                Akhiri Trip
+                            </button>
+                        </div>
+                    </div>
+                    <div id="pickup-scanner-container" style="display: none; margin-bottom: 1rem; border-radius: 8px; overflow: hidden; background: #000;"></div>
+
+                    <div style="width: 100%; background-color: var(--color-surface-2); border-radius: 8px; height: 8px; overflow: hidden;">
+                        <div id="pickup-progress-bar" style="height: 100%; width: 0%; background-color: var(--color-primary); transition: width 0.3s ease;"></div>
+                    </div>
+                    <p id="pickup-progress-text" style="text-align: right; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">Progress: 0/0</p>
+                </div>
+                <div id="pickup-list-container" style="display: flex; flex-direction: column; gap: 1.5rem;"></div>
+            `;
+        }
 
         this.renderContent();
     },
 
     renderContent: function() {
-        const container = document.getElementById('view-pickup');
-        if (!container) return;
+        const listContainer = document.getElementById('pickup-list-container');
+        if (!listContainer) return;
 
         // Calculate progress
         const total = this.tripPackages.length;
@@ -44,6 +75,24 @@ const Pickup = {
         });
         
         const progressPercent = total === 0 ? 0 : Math.round((pickedUpCount / total) * 100);
+
+        // Update progress bar
+        const progressBar = document.getElementById('pickup-progress-bar');
+        if (progressBar) {
+            progressBar.style.width = progressPercent + '%';
+        }
+        
+        const progressText = document.getElementById('pickup-progress-text');
+        if (progressText) {
+            progressText.textContent = `Progress: ${pickedUpCount}/${total}`;
+        }
+
+        // Update complete button style
+        const completeBtn = document.getElementById('btn-complete-trip');
+        if (completeBtn) {
+            completeBtn.style.backgroundColor = progressPercent === 100 ? 'var(--color-success)' : 'var(--color-surface-2)';
+            completeBtn.textContent = progressPercent === 100 ? 'Selesai ✓' : 'Akhiri Trip';
+        }
 
         // Group by store
         const grouped = {};
@@ -55,29 +104,9 @@ const Pickup = {
 
         const stores = window.DB.getAllStores();
         const storeMap = {};
-        stores.forEach(s => storeMap[s.id] = s);
+        stores.forEach(s => storeMap[s.kode_toko] = s);
 
-        let html = `
-            <div style="position: sticky; top: 0; background: var(--color-bg); z-index: 10; padding: 1rem 0; margin-bottom: 1rem; border-bottom: 1px solid var(--color-surface-2);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <h2 style="font-size: 1.5rem; margin: 0;">Mode Pickup</h2>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn" id="btn-toggle-scanner" style="background-color: var(--color-primary); color: white; padding: 0.5rem 1rem; width: auto;" onclick="Pickup.toggleScanner()">📷 Scan</button>
-                        <button class="btn" style="background-color: ${progressPercent === 100 ? 'var(--color-success)' : 'var(--color-surface-2)'}; color: white; padding: 0.5rem 1rem; width: auto;" onclick="Pickup.handleCompleteTrip()">
-                            ${progressPercent === 100 ? 'Selesai ✓' : 'Akhiri Trip'}
-                        </button>
-                    </div>
-                </div>
-                <div id="pickup-scanner-container" style="display: none; margin-bottom: 1rem; border-radius: 8px; overflow: hidden; background: #000;"></div>
-
-                <div style="width: 100%; background-color: var(--color-surface-2); border-radius: 8px; height: 8px; overflow: hidden;">
-                    <div style="height: 100%; width: ${progressPercent}%; background-color: var(--color-primary); transition: width 0.3s ease;"></div>
-                </div>
-                <p style="text-align: right; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">Progress: ${pickedUpCount}/${total}</p>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        `;
+        let html = '';
 
         for (const [storeId, storePkgs] of Object.entries(grouped)) {
             const storeName = storeMap[storeId] ? storeMap[storeId].nama_toko : 'Toko Tidak Diketahui';
@@ -137,8 +166,7 @@ const Pickup = {
             html += `</div></div>`;
         }
 
-        html += `</div>`;
-        container.innerHTML = html;
+        listContainer.innerHTML = html;
 
         // Generate barcodes
         if (window.Barcode) {
@@ -217,6 +245,22 @@ const Pickup = {
     },
 
     handleScanResult: function(awb) {
+        if (!awb) return;
+        
+        const now = Date.now();
+        // 3 seconds cooldown for identical AWB, 1.5 seconds general cooldown
+        if (awb === this._lastScannedAWB && (now - this._lastScanTime < 3000)) {
+            console.log('Ignore scan - duplicate/cooldown');
+            return;
+        }
+        if (now - this._lastScanTime < 1500) {
+            console.log('Ignore scan - too fast');
+            return;
+        }
+        
+        this._lastScannedAWB = awb;
+        this._lastScanTime = now;
+
         // Find package in current trip
         const pkg = this.tripPackages.find(p => p.nomor_awb === awb);
         if (pkg) {
@@ -235,6 +279,7 @@ const Pickup = {
             window.DB.completeTrip(this.currentTripId);
         }
         if (window.Barcode) window.Barcode.stopScanner();
+        this.renderedTripId = null;
         window.Utils.showToast('Trip Selesai!', 'success');
         if (window.AuditLog) window.AuditLog.log('COMPLETE_TRIP', 'trip', { trip_id: this.currentTripId, packages: this.tripPackages.length });
         window.location.hash = '#dashboard';
