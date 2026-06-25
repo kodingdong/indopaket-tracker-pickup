@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paket-v1.0.6';
+const CACHE_NAME = 'paket-v1.1.0';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -23,7 +23,6 @@ const ASSETS_TO_CACHE = [
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
     'https://cdn.jsdelivr.net/npm/jsbarcode@3/dist/JsBarcode.all.min.js',
     'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js',
-    'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'
 ];
 
 // Listen for skip waiting message from client

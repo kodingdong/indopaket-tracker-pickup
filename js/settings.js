@@ -33,6 +33,27 @@ const Settings = {
                 </div>
             </div>
 
+            <!-- Gemini AI -->
+            <div class="card glassmorphism" style="margin-bottom:1rem;">
+                <h3 style="margin-top:0;font-size:1.1rem;">🤖 Gemini AI (OCR)</h3>
+                <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:0.75rem;">
+                    API Key untuk ekstraksi data resi dengan AI. Gratis di
+                    <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--color-primary);">Google AI Studio</a>.
+                </p>
+                <div class="form-group" style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.85rem;color:var(--color-text-muted);">API Key</label>
+                    <div style="display:flex;gap:0.5rem;">
+                        <input class="input" id="settings-gemini-key" type="password" value="${localStorage.getItem('paket_gemini_api_key') || ''}" placeholder="Masukkan API Key" style="flex:1;font-family:monospace;">
+                        <button class="btn" style="background:var(--color-surface-2);color:white;padding:0.5rem;" onclick="var el=document.getElementById('settings-gemini-key');el.type=el.type==='password'?'text':'password';">👁️</button>
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn-primary" style="flex:1;" onclick="Settings.saveGeminiKey()">💾 Simpan</button>
+                    <button class="btn" style="flex:1;background:var(--color-surface-2);color:white;" onclick="Settings.testGeminiKey()">🧪 Test</button>
+                </div>
+                <div id="settings-gemini-status" style="font-size:0.85rem;margin-top:0.75rem;display:none;"></div>
+            </div>
+
             <!-- Google Sheets Sync -->
             <div class="card glassmorphism" style="margin-bottom:1rem;">
                 <h3 style="margin-top:0;font-size:1.1rem;">☁️ Google Sheets Sync</h3>
@@ -178,6 +199,45 @@ const Settings = {
         if (window.App && window.App.updateSyncIndicator) window.App.updateSyncIndicator();
         if (window.App && window.App.updateAdminNavVisibility) window.App.updateAdminNavVisibility();
         if (window.AuditLog) window.AuditLog.log('CONFIG_CHANGE', 'settings', { role: cfg.role, mode: cfg.mode, deviceName: cfg.deviceName });
+    },
+
+    // --- Gemini AI Key ---
+    saveGeminiKey: function() {
+        var key = document.getElementById('settings-gemini-key').value.trim();
+        if (!key) {
+            localStorage.removeItem('paket_gemini_api_key');
+            window.Utils.showToast('🗑️ API Key dihapus', 'info');
+        } else {
+            localStorage.setItem('paket_gemini_api_key', key);
+            window.Utils.showToast('✅ API Key tersimpan!', 'success');
+        }
+    },
+
+    testGeminiKey: async function() {
+        var statusEl = document.getElementById('settings-gemini-status');
+        var key = document.getElementById('settings-gemini-key').value.trim() || localStorage.getItem('paket_gemini_api_key') || '';
+        if (!key) {
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '<span style="color:var(--color-danger);">❌ Masukkan API Key terlebih dahulu</span>';
+            return;
+        }
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<span style="color:var(--color-warning);">⏳ Testing...</span>';
+        try {
+            var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: 'Respond with: ok' }] }] })
+            });
+            if (resp.ok) {
+                statusEl.innerHTML = '<span style="color:var(--color-success);">✅ API Key valid! Gemini siap digunakan.</span>';
+            } else {
+                var err = await resp.json();
+                statusEl.innerHTML = '<span style="color:var(--color-danger);">❌ ' + (err.error ? err.error.message : 'Key tidak valid') + '</span>';
+            }
+        } catch (e) {
+            statusEl.innerHTML = '<span style="color:var(--color-danger);">❌ Gagal: ' + e.message + '</span>';
+        }
     },
 
     // --- Sync Actions ---
