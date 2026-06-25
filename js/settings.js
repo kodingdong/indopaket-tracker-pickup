@@ -44,7 +44,7 @@ const Settings = {
                     <label style="font-size:0.85rem;color:var(--color-text-muted);">API Key</label>
                     <div style="display:flex;gap:0.5rem;">
                         <input class="input" id="settings-gemini-key" type="password" value="${localStorage.getItem('paket_gemini_api_key') || ''}" placeholder="Masukkan API Key" style="flex:1;font-family:monospace;">
-                        <button class="btn" style="background:var(--color-surface-2);color:white;padding:0.5rem;" onclick="var el=document.getElementById('settings-gemini-key');el.type=el.type==='password'?'text':'password';">👁️</button>
+                        <button class="btn" style="width:auto;background:var(--color-surface-2);color:white;padding:0.5rem 1rem;" onclick="var el=document.getElementById('settings-gemini-key');el.type=el.type==='password'?'text':'password';">👁️</button>
                     </div>
                 </div>
                 <div style="display:flex;gap:0.5rem;">
