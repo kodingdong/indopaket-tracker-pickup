@@ -42,9 +42,9 @@ const Settings = {
                 </p>
                 <div class="form-group" style="margin-bottom:0.75rem;">
                     <label style="font-size:0.85rem;color:var(--color-text-muted);">API Key</label>
-                    <div style="display:flex;gap:0.5rem;">
-                        <input class="input" id="settings-gemini-key" type="password" value="${localStorage.getItem('paket_gemini_api_key') || ''}" placeholder="Masukkan API Key" style="flex:1;font-family:monospace;">
-                        <button class="btn" style="width:auto;background:var(--color-surface-2);color:white;padding:0.5rem 1rem;" onclick="var el=document.getElementById('settings-gemini-key');el.type=el.type==='password'?'text':'password';">👁️</button>
+                    <div style="display:flex; gap:0.5rem; width:100%; align-items:stretch;">
+                        <input class="input" id="settings-gemini-key" type="password" value="${localStorage.getItem('paket_gemini_api_key') || ''}" placeholder="Masukkan API Key" style="flex: 1 1 auto; width: 100%; font-family:monospace; margin:0;">
+                        <button class="btn" style="flex: 0 0 50px; width: 50px; min-width: 50px; padding:0; display:flex; align-items:center; justify-content:center; background:var(--color-surface-2); color:white;" onclick="var el=document.getElementById('settings-gemini-key');el.type=el.type==='password'?'text':'password';">👁️</button>
                     </div>
                 </div>
                 <div style="display:flex;gap:0.5rem;">
