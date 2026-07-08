@@ -33,25 +33,42 @@ const Settings = {
                 </div>
             </div>
 
-            <!-- Gemini AI -->
+            <!-- OCR Engine -->
             <div class="card glassmorphism" style="margin-bottom:1rem;">
-                <h3 style="margin-top:0;font-size:1.1rem;">🤖 Gemini AI (OCR)</h3>
+                <h3 style="margin-top:0;font-size:1.1rem;">📷 OCR Engine</h3>
                 <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:0.75rem;">
-                    API Key untuk ekstraksi data resi dengan AI. Gratis di
-                    <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--color-primary);">Google AI Studio</a>.
+                    Pilih engine untuk ekstraksi data dari gambar resi.
                 </p>
                 <div class="form-group" style="margin-bottom:0.75rem;">
-                    <label style="font-size:0.85rem;color:var(--color-text-muted);">API Key</label>
-                    <div style="display:flex; gap:0.5rem; width:100%; align-items:stretch;">
-                        <input class="input" id="settings-gemini-key" type="password" value="${localStorage.getItem('paket_gemini_api_key') || ''}" placeholder="Masukkan API Key" style="flex: 1 1 auto; width: 100%; font-family:monospace; margin:0;">
-                        <button class="btn" style="flex: 0 0 50px; width: 50px; min-width: 50px; padding:0; display:flex; align-items:center; justify-content:center; background:var(--color-surface-2); color:white;" onclick="var el=document.getElementById('settings-gemini-key');el.type=el.type==='password'?'text':'password';">👁️</button>
+                    <label style="font-size:0.85rem;color:var(--color-text-muted);">Engine OCR</label>
+                    <select class="input" id="settings-ocr-engine" onchange="Settings.onOcrEngineChange()">
+                        <option value="tesseract" ${(localStorage.getItem('paket_ocr_engine') || 'tesseract') === 'tesseract' ? 'selected' : ''}>🔤 Tesseract.js (Lokal / Gratis)</option>
+                        <option value="ocrspace" ${localStorage.getItem('paket_ocr_engine') === 'ocrspace' ? 'selected' : ''}>🌐 OCR.space (API Key)</option>
+                    </select>
+                </div>
+                <div id="settings-ocrspace-config" style="display:${localStorage.getItem('paket_ocr_engine') === 'ocrspace' ? 'block' : 'none'};">
+                    <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:0.75rem;">
+                        Gratis 500 request/hari. Daftar di
+                        <a href="https://ocr.space/ocrapi" target="_blank" style="color:var(--color-primary);">OCR.space</a>.
+                    </p>
+                    <div class="form-group" style="margin-bottom:0.75rem;">
+                        <label style="font-size:0.85rem;color:var(--color-text-muted);">API Key</label>
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <input class="input" id="settings-ocrspace-key" type="password" value="${localStorage.getItem('paket_ocrspace_api_key') || ''}" placeholder="Masukkan API Key OCR.space" style="flex:1; min-width:0; font-family:monospace;">
+                            <button class="btn" style="flex:0 0 36px; width:36px; height:36px; min-width:36px; padding:0; display:flex; align-items:center; justify-content:center; background:var(--color-surface-2); color:white; font-size:0.9rem;" onclick="var el=document.getElementById('settings-ocrspace-key');el.type=el.type==='password'?'text':'password';">👁</button>
+                        </div>
                     </div>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn btn-primary" style="flex:1;" onclick="Settings.saveOcrSpaceKey()">💾 Simpan</button>
+                        <button class="btn" style="flex:1;background:var(--color-surface-2);color:white;" onclick="Settings.testOcrSpaceKey()">🧪 Test</button>
+                    </div>
+                    <div id="settings-ocrspace-status" style="font-size:0.85rem;margin-top:0.75rem;display:none;"></div>
                 </div>
-                <div style="display:flex;gap:0.5rem;">
-                    <button class="btn btn-primary" style="flex:1;" onclick="Settings.saveGeminiKey()">💾 Simpan</button>
-                    <button class="btn" style="flex:1;background:var(--color-surface-2);color:white;" onclick="Settings.testGeminiKey()">🧪 Test</button>
+                <div id="settings-tesseract-info" style="display:${(localStorage.getItem('paket_ocr_engine') || 'tesseract') === 'tesseract' ? 'block' : 'none'};">
+                    <p style="font-size:0.8rem;color:var(--color-text-muted);margin:0.5rem 0 0;">
+                        ✅ Tesseract.js berjalan di browser, tidak butuh API Key. Hasil parsing perlu regex manual.
+                    </p>
                 </div>
-                <div id="settings-gemini-status" style="font-size:0.85rem;margin-top:0.75rem;display:none;"></div>
             </div>
 
             <!-- Google Sheets Sync -->
@@ -201,21 +218,29 @@ const Settings = {
         if (window.AuditLog) window.AuditLog.log('CONFIG_CHANGE', 'settings', { role: cfg.role, mode: cfg.mode, deviceName: cfg.deviceName });
     },
 
-    // --- Gemini AI Key ---
-    saveGeminiKey: function() {
-        var key = document.getElementById('settings-gemini-key').value.trim();
+    // --- OCR Engine ---
+    onOcrEngineChange: function() {
+        var engine = document.getElementById('settings-ocr-engine').value;
+        localStorage.setItem('paket_ocr_engine', engine);
+        document.getElementById('settings-ocrspace-config').style.display = engine === 'ocrspace' ? 'block' : 'none';
+        document.getElementById('settings-tesseract-info').style.display = engine === 'tesseract' ? 'block' : 'none';
+        window.Utils.showToast('✅ OCR engine: ' + (engine === 'tesseract' ? 'Tesseract.js' : 'OCR.space'), 'success');
+    },
+
+    saveOcrSpaceKey: function() {
+        var key = document.getElementById('settings-ocrspace-key').value.trim();
         if (!key) {
-            localStorage.removeItem('paket_gemini_api_key');
+            localStorage.removeItem('paket_ocrspace_api_key');
             window.Utils.showToast('🗑️ API Key dihapus', 'info');
         } else {
-            localStorage.setItem('paket_gemini_api_key', key);
-            window.Utils.showToast('✅ API Key tersimpan!', 'success');
+            localStorage.setItem('paket_ocrspace_api_key', key);
+            window.Utils.showToast('✅ API Key OCR.space tersimpan!', 'success');
         }
     },
 
-    testGeminiKey: async function() {
-        var statusEl = document.getElementById('settings-gemini-status');
-        var key = document.getElementById('settings-gemini-key').value.trim() || localStorage.getItem('paket_gemini_api_key') || '';
+    testOcrSpaceKey: async function() {
+        var statusEl = document.getElementById('settings-ocrspace-status');
+        var key = document.getElementById('settings-ocrspace-key').value.trim() || localStorage.getItem('paket_ocrspace_api_key') || '';
         if (!key) {
             statusEl.style.display = 'block';
             statusEl.innerHTML = '<span style="color:var(--color-danger);">❌ Masukkan API Key terlebih dahulu</span>';
@@ -224,16 +249,24 @@ const Settings = {
         statusEl.style.display = 'block';
         statusEl.innerHTML = '<span style="color:var(--color-warning);">⏳ Testing...</span>';
         try {
-            var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: 'Respond with: ok' }] }] })
-            });
-            if (resp.ok) {
-                statusEl.innerHTML = '<span style="color:var(--color-success);">✅ API Key valid! Gemini siap digunakan.</span>';
+            // Create a tiny test image (1x1 white pixel PNG)
+            var canvas = document.createElement('canvas');
+            canvas.width = 100; canvas.height = 30;
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff'; ctx.fillRect(0,0,100,30);
+            ctx.fillStyle = '#000'; ctx.font = '14px sans-serif'; ctx.fillText('test', 10, 20);
+            var dataUrl = canvas.toDataURL('image/png');
+            var base64 = dataUrl.split(',')[1];
+            var formData = new FormData();
+            formData.append('apikey', key);
+            formData.append('base64Image', 'data:image/png;base64,' + base64);
+            formData.append('language', 'eng');
+            var resp = await fetch('https://api.ocr.space/parse/image', { method: 'POST', body: formData });
+            var result = await resp.json();
+            if (!result.IsErroredOnProcessing) {
+                statusEl.innerHTML = '<span style="color:var(--color-success);">✅ API Key valid! OCR.space siap digunakan.</span>';
             } else {
-                var err = await resp.json();
-                statusEl.innerHTML = '<span style="color:var(--color-danger);">❌ ' + (err.error ? err.error.message : 'Key tidak valid') + '</span>';
+                statusEl.innerHTML = '<span style="color:var(--color-danger);">❌ ' + (result.ErrorMessage || 'Key tidak valid') + '</span>';
             }
         } catch (e) {
             statusEl.innerHTML = '<span style="color:var(--color-danger);">❌ Gagal: ' + e.message + '</span>';

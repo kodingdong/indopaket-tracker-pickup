@@ -4,9 +4,13 @@ const OCR = {
     extractedData: [],
     selectedFiles: [],
 
-    // ==================== GEMINI AI CORE ====================
-    getApiKey: function() {
-        return localStorage.getItem('paket_gemini_api_key') || '';
+    // ==================== OCR ENGINES ====================
+    _getOcrSpaceApiKey: function() {
+        return localStorage.getItem('paket_ocrspace_api_key') || '';
+    },
+    
+    _getEngine: function() {
+        return localStorage.getItem('paket_ocr_engine') || 'tesseract';
     },
 
     _fileToBase64: function(file) {
@@ -18,72 +22,108 @@ const OCR = {
         });
     },
 
-    _callGeminiVision: async function(base64Data, mimeType, prompt) {
-        var apiKey = this.getApiKey();
-        if (!apiKey) throw new Error('API Key Gemini belum dikonfigurasi');
-        var response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [
-                        { text: prompt },
-                        { inline_data: { mime_type: mimeType, data: base64Data } }
-                    ]}],
-                    generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }
-                })
-            }
-        );
-        if (!response.ok) throw new Error('Gemini API error: ' + response.status);
+    _processWithOCRSpace: async function(base64Data, mimeType) {
+        var apiKey = this._getOcrSpaceApiKey();
+        if (!apiKey) throw new Error('API Key OCR.space belum dikonfigurasi');
+        var formData = new FormData();
+        formData.append('apikey', apiKey);
+        formData.append('base64Image', 'data:' + mimeType + ';base64,' + base64Data);
+        formData.append('language', 'eng');
+        formData.append('isOverlayRequired', 'false');
+
+        var response = await fetch('https://api.ocr.space/parse/image', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) throw new Error('OCR.space API error: ' + response.status);
         var result = await response.json();
-        if (!result.candidates || !result.candidates[0]) throw new Error('Response tidak valid');
-        return JSON.parse(result.candidates[0].content.parts[0].text);
+        
+        if (result.IsErroredOnProcessing) {
+            throw new Error(result.ErrorMessage ? result.ErrorMessage[0] : 'OCR Error');
+        }
+        
+        if (!result.ParsedResults || result.ParsedResults.length === 0) {
+            return ''; // No text found
+        }
+        
+        return result.ParsedResults[0].ParsedText;
     },
 
-    _getResiPrompt: function() {
-        var stores = window.DB.getAllStores();
-        var codes = stores.map(function(s) { return s.kode_toko; }).filter(Boolean).join(', ');
-        return 'Tugas: Ekstrak data resi pengiriman Indopaket dari gambar ini ke format JSON tunggal.\n\n' +
-            'Struktur JSON yang diharapkan:\n' +
-            '{\n' +
-            '  "nama_penerima": "string",\n' +
-            '  "nomor_awb": "string",\n' +
-            '  "kode_pin": "string",\n' +
-            '  "kode_toko": "string",\n' +
-            '  "tanggal_aktif": "string"\n' +
-            '}\n\n' +
-            'Aturan Ekstraksi:\n' +
-            '1. nama_penerima: Tulisan PALING BESAR dan BOLD (seperti watermark), posisinya di area kosong (tidak selalu di tengah). Abaikan label UI seperti "Estimated Delivery", "Current Status".\n' +
-            '2. nomor_awb: Berada tepat di bawah tulisan "Nomor AWB", selalu dimulai dengan huruf "OR" lalu diikuti angka (contoh: OR3260604092640).\n' +
-            '3. kode_pin: Berada tepat di bawah tulisan "Kode PIN", terdiri dari 6 karakter (huruf kapital semua atau campuran huruf dan angka).\n' +
-            '4. kode_toko: Berada di bawah nama_penerima, dengan ukuran font sama atau sedikit lebih kecil dari nama_penerima. Terdiri dari 4 karakter huruf kapital (bisa campuran huruf dan angka atau huruf semua).\n' +
-            '5. tanggal_aktif: Ambil tanggal di bawah tulisan "Diperbarui Aktif" (format menjadi YYYY-MM-DD).\n\n' +
-            (codes ? 'Sebagai referensi, ini daftar kode toko yang valid di sistem kami: ' + codes + '\n\n' : '') +
-            'Hanya kembalikan 1 objek JSON murni tanpa markdown atau teks pengantar apapun.';
+    _processWithTesseract: async function(file) {
+        if (!window.Tesseract) throw new Error('Tesseract.js belum dimuat');
+        var worker = await window.Tesseract.createWorker('eng');
+        var result = await worker.recognize(file);
+        await worker.terminate();
+        return result.data.text;
     },
 
-    _getBulkPrompt: function() {
+    // ==================== TEXT PARSING ====================
+    _parseTextToData: function(text, isBulk) {
+        var results = [];
         var stores = window.DB.getAllStores();
-        var codes = stores.map(function(s) { return s.kode_toko; }).filter(Boolean).join(', ');
-        return 'Tugas: Ekstrak SEMUA baris data dari gambar tabel/spreadsheet ini ke format Array JSON.\n\n' +
-            'Struktur JSON yang diharapkan:\n' +
-            '[\n' +
-            '  {\n' +
-            '    "nama_penerima": "string",\n' +
-            '    "nomor_awb": "string",\n' +
-            '    "kode_pin": "string",\n' +
-            '    "kode_toko": "string"\n' +
-            '  }\n' +
-            ']\n\n' +
-            'Aturan Ekstraksi:\n' +
-            '1. Gambar biasanya berupa tabel dengan kolom Nama, Kode Toko, Nomor AWB, dan PIN.\n' +
-            '2. Ekstrak SETIAP BARIS menjadi satu objek di dalam array.\n' +
-            '3. nomor_awb: Format "OR" + 13 angka.\n' +
-            '4. kode_pin: 6 karakter alfanumerik.\n' +
-            '5. Abaikan baris header tabel jika ada.\n\n' +
-            (codes ? 'Referensi kode toko valid: ' + codes + '\n\n' : '') +
-            'Hanya kembalikan array JSON murni tanpa markdown teks apapun.';
+        
+        if (isBulk) {
+            // Very naive bulk parsing for spreadsheet screenshot texts
+            var lines = text.split('\n');
+            var currentStore = '';
+            lines.forEach(function(line) {
+                var cleanLine = line.trim();
+                if (!cleanLine) return;
+                
+                // Try to detect store code in the line
+                var codeMatch = cleanLine.match(/\b([A-Z]{4})\b/);
+                if (codeMatch) currentStore = codeMatch[1];
+                
+                var awbMatch = cleanLine.match(/OR\d{13}/);
+                var pinMatch = cleanLine.match(/\b[A-Z0-9]{6}\b/);
+                
+                if (awbMatch && pinMatch) {
+                    // Try to guess name (everything before AWB or after PIN that isn't a store code)
+                    var nameParts = cleanLine.replace(awbMatch[0], '').replace(pinMatch[0], '').trim();
+                    if (codeMatch) nameParts = nameParts.replace(codeMatch[0], '').trim();
+                    
+                    results.push({
+                        kode_toko: currentStore,
+                        nama_penerima: nameParts || 'Unknown',
+                        nomor_awb: awbMatch[0],
+                        kode_pin: pinMatch[0]
+                    });
+                }
+            });
+        } else {
+            // Single receipt parsing
+            var data = {
+                kode_toko: '',
+                nama_penerima: 'Unknown',
+                nomor_awb: '',
+                kode_pin: '',
+                tanggal_aktif: ''
+            };
+            
+            // Extract AWB (OR followed by 13 digits)
+            var awbMatch = text.match(/OR\d{13}/);
+            if (awbMatch) data.nomor_awb = awbMatch[0];
+            
+            // Extract PIN (6 alphanumeric chars, often near "PIN" or "Kode")
+            var pinRegex = /PIN\s*[:\-]?\s*([A-Z0-9]{6})\b/i;
+            var pinMatch = text.match(pinRegex);
+            if (pinMatch) {
+                data.kode_pin = pinMatch[1];
+            } else {
+                // Fallback: any 6 char alphanumeric
+                var fallbackPinMatch = text.match(/\b([A-Z0-9]{6})\b/);
+                if (fallbackPinMatch) data.kode_pin = fallbackPinMatch[1];
+            }
+            
+            // Extract Store Code (4 uppercase chars)
+            var codeMatch = text.match(/\b([A-Z]{4})\b/);
+            if (codeMatch) data.kode_toko = codeMatch[1];
+            
+            results.push(data);
+        }
+        
+        return isBulk ? results : results[0];
     },
 
     updateTabs: function(activeTab) {
@@ -200,8 +240,12 @@ const OCR = {
     },
 
     startProcessing: async function() {
-        var apiKey = this.getApiKey();
-        if (!apiKey) { window.Utils.showToast('⚠️ API Key Gemini belum diset. Buka ⚙️ Settings.', 'warning'); return; }
+        var engine = this._getEngine();
+        if (engine === 'ocrspace' && !this._getOcrSpaceApiKey()) {
+            window.Utils.showToast('⚠️ API Key OCR.space belum diset. Buka ⚙️ Settings.', 'warning');
+            return;
+        }
+
         document.getElementById('btn-process-ocr').style.display = 'none';
         document.getElementById('ocr-progress').style.display = 'block';
         
@@ -215,12 +259,20 @@ const OCR = {
         var failCount = 0;
         
         for (var i = 0; i < total; i++) {
-            statusText.innerText = '🤖 AI memproses gambar ' + (i+1) + ' dari ' + total + '...';
+            statusText.innerText = '📷 Memproses gambar ' + (i+1) + ' dari ' + total + ' (' + engine + ')...';
             progressBar.style.width = Math.round((i / total) * 100) + '%';
             try {
-                var fileData = await this._fileToBase64(this.selectedFiles[i]);
-                var result = await this._callGeminiVision(fileData.base64, fileData.mimeType, this._getResiPrompt());
+                var extractedText = '';
+                if (engine === 'ocrspace') {
+                    var fileData = await this._fileToBase64(this.selectedFiles[i]);
+                    extractedText = await this._processWithOCRSpace(fileData.base64, fileData.mimeType);
+                } else {
+                    extractedText = await this._processWithTesseract(this.selectedFiles[i]);
+                }
                 
+                var result = this._parseTextToData(extractedText, false);
+                if (!result) continue;
+
                 // Cross-reference store code with local DB
                 var storeId = '';
                 var storeCode = (result.kode_toko || '').toUpperCase();
@@ -247,9 +299,9 @@ const OCR = {
                     pin: (result.kode_pin || '').toUpperCase(),
                     deadline: extractedDeadline,
                     urgent: urgentVal,
-                    catatan: 'AI Extract'
+                    catatan: 'OCR Extract'
                 });
-            } catch (err) { console.error('AI error', err); failCount++; }
+            } catch (err) { console.error('OCR error', err); failCount++; }
         }
         progressBar.style.width = '100%';
         statusText.innerText = 'Selesai! ' + this.extractedData.length + ' berhasil' + (failCount > 0 ? ', ' + failCount + ' gagal' : '');
@@ -322,8 +374,12 @@ const OCR = {
     },
 
     startBulkProcessing: async function() {
-        var apiKey = this.getApiKey();
-        if (!apiKey) { window.Utils.showToast('⚠️ API Key Gemini belum diset. Buka ⚙️ Settings.', 'warning'); return; }
+        var engine = this._getEngine();
+        if (engine === 'ocrspace' && !this._getOcrSpaceApiKey()) {
+            window.Utils.showToast('⚠️ API Key OCR.space belum diset. Buka ⚙️ Settings.', 'warning');
+            return;
+        }
+
         document.getElementById('btn-process-bulk').style.display = 'none';
         document.getElementById('bulk-progress').style.display = 'block';
         
@@ -337,17 +393,26 @@ const OCR = {
         var failCount = 0;
         
         for (var i = 0; i < total; i++) {
-            statusText.innerText = '🤖 AI memproses screenshot ' + (i+1) + ' dari ' + total + '...';
+            statusText.innerText = '📷 Memproses screenshot ' + (i+1) + ' dari ' + total + ' (' + engine + ')...';
             progressBar.style.width = Math.round((i / total) * 100) + '%';
             try {
-                var fileData = await this._fileToBase64(this.selectedFiles[i]);
-                var result = await this._callGeminiVision(fileData.base64, fileData.mimeType, this._getBulkPrompt());
+                var extractedText = '';
+                if (engine === 'ocrspace') {
+                    var fileData = await this._fileToBase64(this.selectedFiles[i]);
+                    extractedText = await this._processWithOCRSpace(fileData.base64, fileData.mimeType);
+                } else {
+                    extractedText = await this._processWithTesseract(this.selectedFiles[i]);
+                }
+                
+                var result = this._parseTextToData(extractedText, true);
                 
                 // Normalize: ensure result is array
                 var rows = Array.isArray(result) ? result : [result];
                 
                 for (var r = 0; r < rows.length; r++) {
                     var row = rows[r];
+                    if (!row || !row.nomor_awb) continue; // Skip empty rows
+
                     var storeId = '';
                     var storeCode = (row.kode_toko || '').toUpperCase();
                     if (storeCode) {
@@ -362,10 +427,10 @@ const OCR = {
                         pin: (row.kode_pin || '').toUpperCase(),
                         deadline: deadlineVal,
                         urgent: urgentVal,
-                        catatan: 'AI Bulk'
+                        catatan: 'OCR Bulk'
                     });
                 }
-            } catch (err) { console.error('AI Bulk error', err); failCount++; }
+            } catch (err) { console.error('OCR Bulk error', err); failCount++; }
         }
         progressBar.style.width = '100%';
         statusText.innerText = 'Selesai! ' + this.extractedData.length + ' data terdeteksi.' + (failCount > 0 ? ' (' + failCount + ' gagal)' : '');
