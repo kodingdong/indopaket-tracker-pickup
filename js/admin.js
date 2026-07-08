@@ -121,10 +121,10 @@ const Admin = {
             const masuk = p.tanggal_masuk ? new Date(p.tanggal_masuk).toLocaleDateString('id-ID') : '-';
 
             rows += '<tr style="border-bottom:1px solid var(--color-surface-2);">' +
-                '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;">' + (p.nama || '-') + '</td>' +
-                '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;font-family:monospace;">' + (p.nomor_awb || '-') + '</td>' +
-                '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;font-weight:600;">' + (p.pin || '-') + '</td>' +
-                '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;">' + storeName + '</td>' +
+                '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;">' + window.Utils.escapeHtml(p.nama || '-') + '</td>' +
+                '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;font-family:monospace;">' + window.Utils.escapeHtml(p.nomor_awb || '-') + '</td>' +
+                '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;font-weight:600;">' + window.Utils.escapeHtml(p.pin || '-') + '</td>' +
+                '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;">' + window.Utils.escapeHtml(storeName) + '</td>' +
                 '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;">' + statusBadge + '</td>' +
                 '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;">' + masuk + '</td>' +
                 '<td style="padding:0.6rem 0.5rem;font-size:0.8rem;">' + deadline + '</td>' +

@@ -78,13 +78,7 @@ const Dashboard = {
             </div>
         `;
 
-        // Search Bar
-        html += `
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <input type="text" id="dashboard-search" placeholder="Cari Nama / AWB / PIN..." value="${this.searchQuery}" 
-                    style="width: 100%; padding: 0.75rem 1rem; border-radius: 24px; border: 1px solid var(--color-surface-2); background-color: var(--color-bg); color: var(--color-text);">
-            </div>
-        `;
+        // Search is rendered below with the bulk action button
 
         // Filter Tabs
         const filters = [
@@ -276,7 +270,7 @@ const Dashboard = {
                     <h3 class="accordion-header" onclick="Dashboard.toggleAccordion('${storeId}')" 
                         style="font-size: 1rem; margin: 0; padding: 0.75rem; background: var(--color-surface-2); border-radius: var(--radius); cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <span>🏪</span> ${storeName}
+                            <span>🏪</span> ${window.Utils.escapeHtml(storeName)}
                             <span class="badge" style="background-color: var(--color-primary); color: white;">${pkgs.length}</span>
                         </div>
                         <span class="accordion-icon" id="acc-icon-${storeId}" style="font-size: 0.8rem;">${isExpanded ? '▲' : '▼'}</span>
@@ -312,14 +306,14 @@ const Dashboard = {
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 ${this.bulkMode ? `<input type="checkbox" ${isSelected ? 'checked' : ''} style="pointer-events: none; width: 1.2rem; height: 1.2rem;" />` : ''}
-                                <h4 style="font-size: 1rem; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${p.nama}</h4>
+                                <h4 style="font-size: 1rem; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${window.Utils.escapeHtml(p.nama)}</h4>
                             </div>
                             <span class="badge badge-${statusClass}" style="white-space: nowrap;">${statusText}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">AWB: ${p.nomor_awb || '-'}</p>
-                                <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.5rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${p.pin}</span></p>
+                                <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">AWB: ${window.Utils.escapeHtml(p.nomor_awb || '-')}</p>
+                                <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.5rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${window.Utils.escapeHtml(p.pin)}</span></p>
                                 <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;" onclick="event.stopPropagation(); Dashboard.toggleBlur(this)">
                                     <canvas id="barcode-dash-${p.id}" class="barcode-blurred" style="height: 30px;"></canvas>
                                 </div>

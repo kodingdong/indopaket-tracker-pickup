@@ -40,12 +40,7 @@
         <div id="view-trip" class="view" style="display: none;">
             <!-- Trip content will be dynamically rendered here by js/trip.js -->
         </div>
-        <div id="view-stats" class="view" style="display: none;">
-            <h2>Statistik</h2>
-            <div class="card glassmorphism">
-                <p>Statistik view content...</p>
-            </div>
-        </div>
+        <div id="view-stats" class="view" style="display: none;"></div>
         <div id="view-stores" class="view" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2>Daftar Toko</h2>
@@ -104,7 +99,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- Tesseract.js is lazy-loaded by js/ocr.js when needed -->
 
     <script src="js/utils.js"></script>
     <script src="js/db.js"></script>

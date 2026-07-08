@@ -109,6 +109,7 @@ const AuditLog = {
             'CLEAR_LOCAL': '🗑️ Hapus Data Lokal',
             'CLEAR_CLOUD': '☁️ Hapus Data Cloud',
             'BULK_IMPORT': '📋 Bulk Import',
+            'BULK_CREATE': '📋 Bulk Tambah Paket',
             'OCR_IMPORT': '📷 OCR Import',
             'CONFIG_CHANGE': '⚙️ Konfigurasi Diubah'
         };

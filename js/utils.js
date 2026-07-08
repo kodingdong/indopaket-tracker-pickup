@@ -4,6 +4,18 @@ const Utils = {
     generateId: function() {
         return Date.now().toString(36) + Math.random().toString(36).substring(2);
     },
+
+    /**
+     * Escape HTML special characters to prevent XSS
+     * @param {string} str - The string to escape
+     * @returns {string} Escaped string safe for innerHTML
+     */
+    escapeHtml: function(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    },
     
     formatDate: function(dateString) {
         const date = new Date(dateString);
@@ -103,3 +115,11 @@ const Utils = {
 };
 
 window.Utils = Utils;
+
+// --- Global Error Handler ---
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('[GlobalError]', message, 'at', source, lineno + ':' + colno, error);
+};
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('[UnhandledPromise]', event.reason);
+});

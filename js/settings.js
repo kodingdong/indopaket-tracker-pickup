@@ -285,30 +285,44 @@ const Settings = {
         this.render();
     },
 
-    handleForcePush: async function() {
-        if (!confirm('⬆️ Force Push akan menimpa SEMUA data di Google Sheets dengan data lokal. Lanjutkan?')) return;
-        if (!confirm('⚠️ Yakin? Data di cloud akan DIHAPUS dan diganti data dari HP ini.')) return;
-        try {
-            window.Utils.showToast('⬆️ Pushing...', 'info');
-            await window.SyncEngine.pushAllToCloud();
-            window.Utils.showToast('✅ Force push berhasil!', 'success');
-            this.render();
-        } catch (e) {
-            window.Utils.showToast('❌ Force push gagal: ' + e.message, 'danger');
-        }
+    handleForcePush: function() {
+        window.Utils.showConfirm({
+            title: '⬆️ Force Push',
+            message: 'Force Push akan menimpa SEMUA data di Google Sheets dengan data lokal. Data di cloud akan DIHAPUS dan diganti data dari HP ini. Lanjutkan?',
+            confirmText: 'Push Sekarang',
+            cancelText: 'Batal',
+            type: 'danger',
+            onConfirm: async function() {
+                try {
+                    window.Utils.showToast('⬆️ Pushing...', 'info');
+                    await window.SyncEngine.pushAllToCloud();
+                    window.Utils.showToast('✅ Force push berhasil!', 'success');
+                    Settings.render();
+                } catch (e) {
+                    window.Utils.showToast('❌ Force push gagal: ' + e.message, 'danger');
+                }
+            }
+        });
     },
 
-    handleForcePull: async function() {
-        if (!confirm('⬇️ Force Pull akan menimpa SEMUA data lokal dengan data dari Google Sheets. Lanjutkan?')) return;
-        if (!confirm('⚠️ Yakin? Data di HP ini akan DIHAPUS dan diganti data dari cloud.')) return;
-        try {
-            window.Utils.showToast('⬇️ Pulling...', 'info');
-            await window.SyncEngine.pullAllFromCloud();
-            window.Utils.showToast('✅ Force pull berhasil!', 'success');
-            this.render();
-        } catch (e) {
-            window.Utils.showToast('❌ Force pull gagal: ' + e.message, 'danger');
-        }
+    handleForcePull: function() {
+        window.Utils.showConfirm({
+            title: '⬇️ Force Pull',
+            message: 'Force Pull akan menimpa SEMUA data lokal dengan data dari Google Sheets. Data di HP ini akan DIHAPUS dan diganti data dari cloud. Lanjutkan?',
+            confirmText: 'Pull Sekarang',
+            cancelText: 'Batal',
+            type: 'danger',
+            onConfirm: async function() {
+                try {
+                    window.Utils.showToast('⬇️ Pulling...', 'info');
+                    await window.SyncEngine.pullAllFromCloud();
+                    window.Utils.showToast('✅ Force pull berhasil!', 'success');
+                    Settings.render();
+                } catch (e) {
+                    window.Utils.showToast('❌ Force pull gagal: ' + e.message, 'danger');
+                }
+            }
+        });
     },
 
     // --- Export ---
@@ -373,11 +387,21 @@ const Settings = {
                     window.Utils.showToast('❌ Format file tidak sesuai', 'warning');
                     return;
                 }
-                if (!confirm('Import data akan menimpa data saat ini. Lanjutkan?')) return;
-                window.DB.importAll(e.target.result);
-                window.Utils.showToast('✅ Data berhasil di-import!', 'success');
-                if (window.AuditLog) window.AuditLog.log('IMPORT_DATA', 'settings', { format: 'JSON' });
-                Settings.render();
+                // Use sync confirm via callback
+                window.Utils.showConfirm({
+                    title: '📥 Import Data',
+                    message: 'Import data akan menimpa data saat ini. Lanjutkan?',
+                    confirmText: 'Import',
+                    cancelText: 'Batal',
+                    type: 'danger',
+                    onConfirm: function() {
+                        window.DB.importAll(e.target.result);
+                        window.Utils.showToast('✅ Data berhasil di-import!', 'success');
+                        if (window.AuditLog) window.AuditLog.log('IMPORT_DATA', 'settings', { format: 'JSON' });
+                        Settings.render();
+                    }
+                });
+                return;
             } catch (err) {
                 window.Utils.showToast('❌ Gagal membaca file JSON', 'danger');
             }
@@ -432,24 +456,38 @@ const Settings = {
 
     // --- Danger Zone ---
     clearLocalData: function() {
-        if (!confirm('🗑️ Hapus SEMUA data lokal? Tindakan ini tidak bisa dibatalkan!')) return;
-        if (!confirm('⚠️ TERAKHIR KALI — yakin hapus semua data?')) return;
-        localStorage.removeItem('paket_stores');
-        localStorage.removeItem('paket_packages');
-        localStorage.removeItem('paket_trips');
-        window.Utils.showToast('🗑️ Data lokal dihapus', 'success');
-        if (window.AuditLog) window.AuditLog.log('CLEAR_LOCAL', 'settings', { message: 'All local data cleared' });
-        this.render();
+        window.Utils.showConfirm({
+            title: '🗑️ Hapus Data Lokal',
+            message: 'Hapus SEMUA data lokal? Tindakan ini tidak bisa dibatalkan! Data di HP ini akan hilang permanen.',
+            confirmText: 'Hapus Semua',
+            cancelText: 'Batal',
+            type: 'danger',
+            onConfirm: function() {
+                localStorage.removeItem('paket_stores');
+                localStorage.removeItem('paket_packages');
+                localStorage.removeItem('paket_trips');
+                window.Utils.showToast('🗑️ Data lokal dihapus', 'success');
+                if (window.AuditLog) window.AuditLog.log('CLEAR_LOCAL', 'settings', { message: 'All local data cleared' });
+                Settings.render();
+            }
+        });
     },
 
-    clearCloudData: async function() {
-        if (!confirm('🗑️ Hapus SEMUA data di Google Sheets?')) return;
-        if (!confirm('⚠️ TERAKHIR KALI — yakin hapus semua data cloud?')) return;
-        try {
-            await window.SyncEngine.pushToCloud({ stores: [], packages: [], trips: [] });
-            window.Utils.showToast('🗑️ Data cloud dihapus', 'success');
-            if (window.AuditLog) window.AuditLog.log('CLEAR_CLOUD', 'settings', { message: 'All cloud data cleared' });
-        } catch (e) { window.Utils.showToast('❌ Gagal hapus cloud: ' + e.message, 'danger'); }
+    clearCloudData: function() {
+        window.Utils.showConfirm({
+            title: '☁️ Hapus Data Cloud',
+            message: 'Hapus SEMUA data di Google Sheets? Tindakan ini tidak bisa dibatalkan!',
+            confirmText: 'Hapus Cloud',
+            cancelText: 'Batal',
+            type: 'danger',
+            onConfirm: async function() {
+                try {
+                    await window.SyncEngine.pushToCloud({ stores: [], packages: [], trips: [] });
+                    window.Utils.showToast('🗑️ Data cloud dihapus', 'success');
+                    if (window.AuditLog) window.AuditLog.log('CLEAR_CLOUD', 'settings', { message: 'All cloud data cleared' });
+                } catch (e) { window.Utils.showToast('❌ Gagal hapus cloud: ' + e.message, 'danger'); }
+            }
+        });
     },
 
     // --- Helpers ---

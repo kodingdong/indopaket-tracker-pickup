@@ -135,15 +135,15 @@ const Pickup = {
                 html += `
                     <div id="pickup-card-${p.id}" style="background: ${cardBg}; border-radius: var(--radius); border: 1px solid var(--color-surface-2); border-left: ${borderLeft}; padding: 1rem; opacity: ${cardOpacity}; transition: all 0.3s ease;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted);">${p.nama}</span>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted);">${window.Utils.escapeHtml(p.nama)}</span>
                             ${isUrgent && !isPickedUp && !isSkipped ? '<span class="badge badge-urgent">Urgent</span>' : ''}
                             ${isPickedUp ? '<span class="badge badge-success">Diambil ✓</span>' : ''}
                             ${isSkipped && !isPickedUp ? '<span class="badge badge-warning">Skipped</span>' : ''}
                         </div>
                         
                         <div style="text-align: center; margin: 1rem 0;">
-                            <div style="font-size: 56px; font-weight: 800; letter-spacing: 2px; line-height: 1; ${isPickedUp ? 'text-decoration: line-through; color: var(--color-success);' : 'color: var(--color-text);'}">${p.pin}</div>
-                            <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.5rem;">AWB: ${p.nomor_awb || '-'}</div>
+                            <div style="font-size: 56px; font-weight: 800; letter-spacing: 2px; line-height: 1; ${isPickedUp ? 'text-decoration: line-through; color: var(--color-success);' : 'color: var(--color-text);'}">${window.Utils.escapeHtml(p.pin)}</div>
+                            <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.5rem;">AWB: ${window.Utils.escapeHtml(p.nomor_awb || '-')}</div>
                             <div style="margin-top: 0.5rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block;">
                                 <canvas id="barcode-pickup-${p.id}"></canvas>
                             </div>

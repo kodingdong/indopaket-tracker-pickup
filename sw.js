@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paket-v1.1.1';
+const CACHE_NAME = 'paket-v1.2.0';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',

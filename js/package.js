@@ -220,14 +220,14 @@ const Package = {
                     <div>
                         <span class="badge badge-${statusClass}" style="margin-bottom: 0.5rem; display: inline-block;">${statusText}</span>
                         ${pkg.urgent ? '<span class="badge badge-urgent" style="margin-left: 0.5rem; display: inline-block;">URGENT</span>' : ''}
-                        <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;">${pkg.nama}</h2>
-                        <p style="color: var(--color-text-muted); font-size: 0.875rem;">${storeName}</p>
+                        <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;">${window.Utils.escapeHtml(pkg.nama)}</h2>
+                        <p style="color: var(--color-text-muted); font-size: 0.875rem;">${window.Utils.escapeHtml(storeName)}</p>
                     </div>
                 </div>
 
                 <div style="background-color: var(--color-surface-2); padding: 1.5rem; border-radius: var(--radius); text-align: center; margin-bottom: 1.5rem;">
                     <p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">KODE PIN</p>
-                    <div style="font-size: 48px; font-weight: 700; letter-spacing: 4px; color: var(--color-primary);">${pkg.pin}</div>
+                    <div style="font-size: 48px; font-weight: 700; letter-spacing: 4px; color: var(--color-primary);">${window.Utils.escapeHtml(pkg.pin)}</div>
                     <div style="margin-top: 0.75rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block;">
                         <canvas id="barcode-pin-detail-${pkg.id}"></canvas>
                     </div>
@@ -239,11 +239,11 @@ const Package = {
                     </div>
                     <div>
                         <p style="color: var(--color-text-muted); font-size: 0.75rem;">NO. RESI / AWB</p>
-                        <p style="font-weight: 500;">${pkg.nomor_awb || '-'}</p>
+                        <p style="font-weight: 500;">${window.Utils.escapeHtml(pkg.nomor_awb || '-')}</p>
                     </div>
                     <div>
                         <p style="color: var(--color-text-muted); font-size: 0.75rem;">INVOICE</p>
-                        <p style="font-weight: 500;">${pkg.invoice || '-'}</p>
+                        <p style="font-weight: 500;">${window.Utils.escapeHtml(pkg.invoice || '-')}</p>
                     </div>
                     <div>
                         <p style="color: var(--color-text-muted); font-size: 0.75rem;">TANGGAL MASUK</p>
@@ -258,7 +258,7 @@ const Package = {
                 ${pkg.catatan ? `
                 <div style="margin-bottom: 1.5rem;">
                     <p style="color: var(--color-text-muted); font-size: 0.75rem;">CATATAN</p>
-                    <p style="font-size: 0.875rem; line-height: 1.5; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 8px;">${pkg.catatan}</p>
+                    <p style="font-size: 0.875rem; line-height: 1.5; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 8px;">${window.Utils.escapeHtml(pkg.catatan)}</p>
                 </div>
                 ` : ''}
 

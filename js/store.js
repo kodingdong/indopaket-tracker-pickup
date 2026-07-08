@@ -123,13 +123,20 @@ const Store = {
     },
 
     handleDelete: function(storeId) {
-        if (confirm('Apakah Anda yakin ingin menghapus toko ini? Semua paket terkait akan kehilangan referensi nama tokonya.')) {
-            var store = window.DB._getById('paket_stores', storeId);
-            window.DB.deleteStore(storeId);
-            window.Utils.showToast('Toko berhasil dihapus', 'success');
-            if (window.AuditLog) window.AuditLog.log('DELETE_STORE', 'store', { kode_toko: store ? store.kode_toko : '', nama_toko: store ? store.nama_toko : '' });
-            this.render();
-        }
+        window.Utils.showConfirm({
+            title: '🗑️ Hapus Toko',
+            message: 'Apakah Anda yakin ingin menghapus toko ini? Semua paket terkait akan kehilangan referensi nama tokonya.',
+            confirmText: 'Hapus',
+            cancelText: 'Batal',
+            type: 'danger',
+            onConfirm: function() {
+                var store = window.DB._getById('paket_stores', storeId);
+                window.DB.deleteStore(storeId);
+                window.Utils.showToast('Toko berhasil dihapus', 'success');
+                if (window.AuditLog) window.AuditLog.log('DELETE_STORE', 'store', { kode_toko: store ? store.kode_toko : '', nama_toko: store ? store.nama_toko : '' });
+                Store.render();
+            }
+        });
     }
 };
 

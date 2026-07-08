@@ -50,7 +50,19 @@ const OCR = {
         return result.ParsedResults[0].ParsedText;
     },
 
+    _loadTesseractIfNeeded: function() {
+        return new Promise(function(resolve, reject) {
+            if (window.Tesseract) return resolve();
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+            script.onload = function() { resolve(); };
+            script.onerror = function() { reject(new Error('Gagal memuat Tesseract.js')); };
+            document.head.appendChild(script);
+        });
+    },
+
     _processWithTesseract: async function(file) {
+        await this._loadTesseractIfNeeded();
         if (!window.Tesseract) throw new Error('Tesseract.js belum dimuat');
         var worker = await window.Tesseract.createWorker('eng');
         var result = await worker.recognize(file);
@@ -496,10 +508,10 @@ const OCR = {
             }
 
             html += '<tr id="review-row-' + idx + '" style="border-bottom:1px solid var(--color-surface-2);">' +
-                '<td style="padding:0.5rem;"><input list="store_list_rev" id="rev_store_' + idx + '" value="' + storeInputVal + '" placeholder="Ketik/Pilih Toko" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;font-size:0.8rem;"></td>' +
-                '<td style="padding:0.5rem;"><input type="text" id="rev_nama_' + idx + '" value="' + (d.nama || '') + '" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
-                '<td style="padding:0.5rem;"><input type="text" id="rev_awb_' + idx + '" value="' + (d.nomor_awb || '') + '" style="' + awbStyle + '">' + awbWarning + '</td>' +
-                '<td style="padding:0.5rem;"><input type="text" id="rev_pin_' + idx + '" value="' + (d.pin || '') + '" style="' + pinStyle + '">' + pinWarning + '</td>' +
+                '<td style="padding:0.5rem;"><input list="store_list_rev" id="rev_store_' + idx + '" value="' + window.Utils.escapeHtml(storeInputVal) + '" placeholder="Ketik/Pilih Toko" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;font-size:0.8rem;"></td>' +
+                '<td style="padding:0.5rem;"><input type="text" id="rev_nama_' + idx + '" value="' + window.Utils.escapeHtml(d.nama || '') + '" style="width:100%;padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
+                '<td style="padding:0.5rem;"><input type="text" id="rev_awb_' + idx + '" value="' + window.Utils.escapeHtml(d.nomor_awb || '') + '" style="' + awbStyle + '">' + awbWarning + '</td>' +
+                '<td style="padding:0.5rem;"><input type="text" id="rev_pin_' + idx + '" value="' + window.Utils.escapeHtml(d.pin || '') + '" style="' + pinStyle + '">' + pinWarning + '</td>' +
                 '<td style="padding:0.5rem;"><input type="date" id="rev_deadline_' + idx + '" value="' + (d.deadline || '') + '" style="padding:0.25rem;background:transparent;border:1px solid var(--color-surface-2);color:white;"></td>' +
                 '<td style="padding:0.5rem;text-align:center;"><input type="checkbox" id="rev_urgent_' + idx + '"' + (d.urgent ? ' checked' : '') + '></td>' +
                 '<td style="padding:0.5rem;"><button class="btn badge-danger" style="padding:0.25rem 0.5rem;border:none;" onclick="OCR.removeRow(' + idx + ')">✕</button></td>' +

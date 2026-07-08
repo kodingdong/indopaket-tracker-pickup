@@ -24,19 +24,14 @@ const SyncEngine = {
     // Config Management
     // ================================================================
     getConfig: function() {
-        var defaultUrl = 'https://script.google.com/macros/s/AKfycbwds0XPr-6s8DAaB2BNxvK1U4-INxFwpHEHTeBuNQmH85a8_h0FGwr2abFy2t5wZ2jc/exec';
         try {
             var raw = localStorage.getItem(this.CONFIG_KEY);
             if (raw) {
-                var parsed = JSON.parse(raw);
-                if (!parsed.scriptUrl) {
-                    parsed.scriptUrl = defaultUrl;
-                }
-                return parsed;
+                return JSON.parse(raw);
             }
         } catch (e) { /* ignore */ }
         return {
-            scriptUrl: defaultUrl,
+            scriptUrl: '',
             deviceName: '',
             role: 'input',
             mode: 'off',           // 'off' | 'manual' | 'auto'

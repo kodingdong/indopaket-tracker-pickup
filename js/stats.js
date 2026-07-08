@@ -133,73 +133,12 @@ const Stats = {
 
             <div class="card glassmorphism">
                 <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">Backup & Restore Data</h3>
-                <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">Simpan data Anda ke file JSON atau restore data dari file backup sebelumnya.</p>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-primary" style="flex: 1;" onclick="Stats.exportData()">⬇️ Export</button>
-                    <button class="btn" style="flex: 1; background: var(--color-surface-2); color: white;" onclick="document.getElementById('import-file').click()">⬆️ Import</button>
-                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="Stats.importData(event)">
-                </div>
+                <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">Kelola export/import data di halaman Pengaturan.</p>
+                <button class="btn btn-primary" onclick="window.location.hash='#settings'">⚙️ Buka Pengaturan</button>
             </div>
         `;
 
         container.innerHTML = html;
-    },
-
-    exportData: function() {
-        try {
-            const data = {
-                stores: window.DB.getAllStores(),
-                packages: window.DB.getAllPackages(),
-                trips: window.DB.getAllTrips(),
-                exportDate: new Date().toISOString()
-            };
-            
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href",     dataStr);
-            downloadAnchorNode.setAttribute("download", "paket_backup_" + new Date().getTime() + ".json");
-            document.body.appendChild(downloadAnchorNode); // required for firefox
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            
-            window.Utils.showToast("Data berhasil diexport", "success");
-        } catch(e) {
-            console.error(e);
-            window.Utils.showToast("Gagal export data", "danger");
-        }
-    },
-
-    importData: function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                if (data.stores && data.packages) {
-                    if (confirm("Restore data akan menimpa data saat ini. Lanjutkan?")) {
-                        localStorage.setItem('paket_stores', JSON.stringify(data.stores));
-                        localStorage.setItem('paket_packages', JSON.stringify(data.packages));
-                        if (data.trips) {
-                            localStorage.setItem('paket_trips', JSON.stringify(data.trips));
-                        }
-                        window.Utils.showToast("Data berhasil direstore", "success");
-                        // Refresh view
-                        this.render();
-                    }
-                } else {
-                    window.Utils.showToast("Format file tidak sesuai", "warning");
-                }
-            } catch (err) {
-                console.error(err);
-                window.Utils.showToast("Gagal membaca file JSON", "danger");
-            }
-        };
-        reader.readAsText(file);
-        
-        // Reset file input
-        event.target.value = '';
     }
 };
 
