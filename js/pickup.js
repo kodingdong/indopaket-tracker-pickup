@@ -325,11 +325,13 @@ const Pickup = {
                         <div style="text-align: center; margin: 1rem 0;">
                             <div style="font-size: 56px; font-weight: 800; letter-spacing: 2px; line-height: 1; ${isPickedUp ? 'text-decoration: line-through; color: var(--color-success);' : 'color: var(--color-text);'}">${window.Utils.escapeHtml(p.pin)}</div>
                             <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.5rem;">AWB: ${window.Utils.escapeHtml(p.nomor_awb || '-')}</div>
-                            <div style="margin-top: 0.5rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block;">
-                                <canvas id="barcode-pickup-${p.id}"></canvas>
-                            </div>
-                            <div style="margin-top: 0.5rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block; margin-left: 0.5rem;">
-                                <canvas id="barcode-pin-pickup-${p.id}"></canvas>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: center; margin-top: 0.5rem; width: 100%; overflow: hidden;">
+                                <div style="background: white; padding: 0.5rem; border-radius: var(--radius); max-width: 100%; display: flex; justify-content: center;">
+                                    <canvas id="barcode-pickup-${p.id}" style="max-width: 100%; height: auto;"></canvas>
+                                </div>
+                                <div style="background: white; padding: 0.5rem; border-radius: var(--radius); max-width: 100%; display: flex; justify-content: center;">
+                                    <canvas id="barcode-pin-pickup-${p.id}" style="max-width: 100%; height: auto;"></canvas>
+                                </div>
                             </div>
                         </div>
 
