@@ -603,7 +603,7 @@ const OCR = {
                     batchAwbSet.add(awbUpper);
                 }
                 
-                window.DB.createPackage({
+                var newPkg = window.DB.createPackage({
                     store_id: storeId,
                     nama: nama,
                     nomor_awb: awb,
@@ -614,6 +614,8 @@ const OCR = {
                     urgent: d.urgent,
                     catatan: 'Bulk Input'
                 });
+                // Auto-add to active trip
+                window.DB.addPackageToActiveTrip(newPkg.id);
                 savedCount++;
             }
         }

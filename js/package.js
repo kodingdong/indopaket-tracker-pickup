@@ -188,8 +188,10 @@ const Package = {
             window.Utils.showToast('Paket berhasil diupdate', 'success');
             if (window.AuditLog) window.AuditLog.log('UPDATE_PACKAGE', 'package', { nama: nama, nomor_awb: data.nomor_awb });
         } else {
-            window.DB.createPackage(data);
-            window.Utils.showToast('Paket berhasil ditambahkan', 'success');
+            const newPkg = window.DB.createPackage(data);
+            // Auto-add to active trip
+            window.DB.addPackageToActiveTrip(newPkg.id);
+            window.Utils.showToast('Paket ditambahkan & masuk Trip', 'success');
             if (window.AuditLog) window.AuditLog.log('CREATE_PACKAGE', 'package', { nama: nama, nomor_awb: data.nomor_awb, pin: pin });
         }
 

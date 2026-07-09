@@ -204,6 +204,29 @@ const DB = {
         });
     },
 
+    updateTrip: function(id, updates) {
+        return this._update(DB_KEYS.TRIPS, id, updates);
+    },
+
+    // Auto-add a package to the active trip, or create a new trip
+    addPackageToActiveTrip: function(packageId) {
+        var trips = this.getAllTrips();
+        var activeTrip = trips.find(function(t) { return t.status === 'active'; });
+
+        if (activeTrip) {
+            // Add to existing active trip if not already in it
+            var packages = activeTrip.packages || [];
+            if (packages.indexOf(packageId) === -1) {
+                packages.push(packageId);
+                this.updateTrip(activeTrip.id, { packages: packages });
+            }
+            return activeTrip;
+        } else {
+            // Create a new active trip with this package
+            return this.createTrip({ packages: [packageId] });
+        }
+    },
+
     // --- Stats ---
     getStats: function() {
         const pkgs = this.getAllPackages();

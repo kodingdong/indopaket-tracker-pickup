@@ -306,7 +306,7 @@ const Dashboard = {
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 ${this.bulkMode ? `<input type="checkbox" ${isSelected ? 'checked' : ''} style="pointer-events: none; width: 1.2rem; height: 1.2rem;" />` : ''}
-                                <h4 style="font-size: 1rem; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;">${window.Utils.escapeHtml(p.nama)}</h4>
+                                <h4 style="font-size: 1rem; font-weight: 600; margin: 0;">${window.Utils.escapeHtml(p.nama)}</h4>
                             </div>
                             <span class="badge badge-${statusClass}" style="white-space: nowrap;">${statusText}</span>
                         </div>
@@ -314,11 +314,13 @@ const Dashboard = {
                             <div>
                                 <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.25rem;">AWB: ${window.Utils.escapeHtml(p.nomor_awb || '-')}</p>
                                 <p style="color: var(--color-text-muted); font-size: 0.75rem; margin-bottom: 0.5rem;">PIN: <span style="font-weight: 600; color: var(--color-text);">${window.Utils.escapeHtml(p.pin)}</span></p>
-                                <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;" onclick="event.stopPropagation(); Dashboard.toggleBlur(this)">
-                                    <canvas id="barcode-dash-${p.id}" class="barcode-blurred" style="height: 30px;"></canvas>
-                                </div>
-                                <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block; margin-left: 0.25rem;" onclick="event.stopPropagation(); Dashboard.toggleBlur(this)">
-                                    <canvas id="barcode-pin-dash-${p.id}" class="barcode-blurred" style="height: 30px;"></canvas>
+                                <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem; flex-wrap: wrap;">
+                                    <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;" onclick="event.stopPropagation(); Dashboard.toggleBlur(this)">
+                                        <canvas id="barcode-dash-${p.id}" class="barcode-blurred" style="height: 30px;"></canvas>
+                                    </div>
+                                    <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;" onclick="event.stopPropagation(); Dashboard.toggleBlur(this)">
+                                        <canvas id="barcode-pin-dash-${p.id}" class="barcode-blurred" style="height: 30px;"></canvas>
+                                    </div>
                                 </div>
                             </div>
                             ${p.status === 'pending' ? `
