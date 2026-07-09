@@ -446,3 +446,21 @@ body {
     filter: none;
     transition: filter 0.3s ease;
 }
+
+/* Pickup Swipe Carousel */
+#pickup-swipe-wrapper {
+    width: 100%;
+    overflow: hidden;
+}
+
+#pickup-list-container {
+    display: flex;
+    will-change: transform;
+}
+
+.pickup-store-slide {
+    flex-shrink: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1rem;
+}

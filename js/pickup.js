@@ -7,6 +7,13 @@ const Pickup = {
     renderedTripId: null,
     _lastScannedAWB: null,
     _lastScanTime: 0,
+    currentStoreIndex: 0,
+    storeKeys: [],
+    _touchStartX: 0,
+    _touchStartY: 0,
+    _touchCurrentX: 0,
+    _isSwiping: false,
+    _swipeThreshold: 80,
     
     render: function(tripId) {
         const container = document.getElementById('view-pickup');
@@ -39,7 +46,7 @@ const Pickup = {
             if (window.Barcode) window.Barcode.stopScanner();
             
             container.innerHTML = `
-                <div id="pickup-header" style="position: sticky; top: 0; background: var(--color-bg); z-index: 10; padding: 1rem 0; margin-bottom: 1rem; border-bottom: 1px solid var(--color-surface-2);">
+                <div id="pickup-header" style="position: sticky; top: 0; background: var(--color-bg); z-index: 10; padding: 1rem 0; border-bottom: 1px solid var(--color-surface-2);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                         <h2 style="font-size: 1.5rem; margin: 0;">Mode Pickup</h2>
                         <div style="display: flex; gap: 0.5rem;">
@@ -55,17 +62,172 @@ const Pickup = {
                         <div id="pickup-progress-bar" style="height: 100%; width: 0%; background-color: var(--color-primary); transition: width 0.3s ease;"></div>
                     </div>
                     <p id="pickup-progress-text" style="text-align: right; font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">Progress: 0/0</p>
+                    
+                    <div id="pickup-store-nav" style="display: none;"></div>
                 </div>
-                <div id="pickup-list-container" style="display: flex; flex-direction: column; gap: 1.5rem;"></div>
+                <div id="pickup-swipe-wrapper" style="position: relative; overflow: hidden; touch-action: pan-y;">
+                    <div id="pickup-list-container" style="display: flex; transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);"></div>
+                </div>
             `;
+
+            // Bind swipe events
+            this._bindSwipeEvents();
         }
 
         this.renderContent();
     },
 
+    _bindSwipeEvents: function() {
+        const wrapper = document.getElementById('pickup-swipe-wrapper');
+        if (!wrapper) return;
+
+        const self = this;
+
+        wrapper.addEventListener('touchstart', function(e) {
+            if (self.storeKeys.length <= 1) return;
+            self._touchStartX = e.touches[0].clientX;
+            self._touchStartY = e.touches[0].clientY;
+            self._touchCurrentX = self._touchStartX;
+            self._isSwiping = false;
+
+            const slider = document.getElementById('pickup-list-container');
+            if (slider) {
+                slider.style.transition = 'none';
+            }
+        }, { passive: true });
+
+        wrapper.addEventListener('touchmove', function(e) {
+            if (self.storeKeys.length <= 1) return;
+
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            const diffX = currentX - self._touchStartX;
+            const diffY = currentY - self._touchStartY;
+
+            // Determine if this is a horizontal swipe (only on first significant move)
+            if (!self._isSwiping && Math.abs(diffX) > 10) {
+                // Only engage if horizontal movement dominates vertical
+                if (Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+                    self._isSwiping = true;
+                }
+            }
+
+            if (self._isSwiping) {
+                self._touchCurrentX = currentX;
+                const slider = document.getElementById('pickup-list-container');
+                if (slider) {
+                    const baseOffset = -self.currentStoreIndex * wrapper.offsetWidth;
+                    // Add resistance at edges
+                    let drag = diffX;
+                    if ((self.currentStoreIndex === 0 && diffX > 0) ||
+                        (self.currentStoreIndex === self.storeKeys.length - 1 && diffX < 0)) {
+                        drag = diffX * 0.3; // rubber band effect
+                    }
+                    slider.style.transform = `translateX(${baseOffset + drag}px)`;
+                }
+            }
+        }, { passive: true });
+
+        wrapper.addEventListener('touchend', function(e) {
+            if (!self._isSwiping || self.storeKeys.length <= 1) {
+                self._isSwiping = false;
+                return;
+            }
+
+            const diff = self._touchCurrentX - self._touchStartX;
+            const slider = document.getElementById('pickup-list-container');
+            if (slider) {
+                slider.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            }
+
+            if (Math.abs(diff) > self._swipeThreshold) {
+                if (diff > 0 && self.currentStoreIndex > 0) {
+                    self.currentStoreIndex--;
+                } else if (diff < 0 && self.currentStoreIndex < self.storeKeys.length - 1) {
+                    self.currentStoreIndex++;
+                }
+            }
+
+            self._snapToCurrentStore();
+            self._isSwiping = false;
+        }, { passive: true });
+    },
+
+    _snapToCurrentStore: function() {
+        const wrapper = document.getElementById('pickup-swipe-wrapper');
+        const slider = document.getElementById('pickup-list-container');
+        if (!wrapper || !slider) return;
+
+        const offset = -this.currentStoreIndex * wrapper.offsetWidth;
+        slider.style.transform = `translateX(${offset}px)`;
+
+        this._updateStoreNav();
+    },
+
+    _updateStoreNav: function() {
+        const nav = document.getElementById('pickup-store-nav');
+        if (!nav || this.storeKeys.length <= 1) {
+            if (nav) nav.style.display = 'none';
+            return;
+        }
+
+        nav.style.display = 'block';
+
+        const stores = window.DB.getAllStores();
+        const storeMap = {};
+        stores.forEach(s => storeMap[s.kode_toko] = s);
+
+        let dotsHtml = '<div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.5rem 0;">';
+        
+        // Left arrow
+        dotsHtml += `<span onclick="Pickup.goToStore(${this.currentStoreIndex - 1})" 
+            style="cursor: pointer; font-size: 1.2rem; opacity: ${this.currentStoreIndex > 0 ? '1' : '0.2'}; 
+            padding: 0.25rem; user-select: none;">◀</span>`;
+
+        // Store name
+        const currentStoreId = this.storeKeys[this.currentStoreIndex];
+        const storeName = storeMap[currentStoreId] ? storeMap[currentStoreId].nama_toko : 'Toko Tidak Diketahui';
+        dotsHtml += `<span style="font-size: 0.85rem; font-weight: 600; color: var(--color-primary); text-align: center; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            🏪 ${window.Utils.escapeHtml(storeName)}
+        </span>`;
+
+        // Right arrow
+        dotsHtml += `<span onclick="Pickup.goToStore(${this.currentStoreIndex + 1})" 
+            style="cursor: pointer; font-size: 1.2rem; opacity: ${this.currentStoreIndex < this.storeKeys.length - 1 ? '1' : '0.2'}; 
+            padding: 0.25rem; user-select: none;">▶</span>`;
+
+        dotsHtml += '</div>';
+
+        // Dots
+        dotsHtml += '<div style="display: flex; justify-content: center; gap: 0.35rem; padding-bottom: 0.25rem;">';
+        this.storeKeys.forEach((key, i) => {
+            const isActive = i === this.currentStoreIndex;
+            dotsHtml += `<span onclick="Pickup.goToStore(${i})" 
+                style="width: ${isActive ? '20px' : '6px'}; height: 6px; border-radius: 3px; 
+                background: ${isActive ? 'var(--color-primary)' : 'var(--color-surface-2)'}; 
+                transition: all 0.3s ease; cursor: pointer;"></span>`;
+        });
+        dotsHtml += '</div>';
+
+        nav.innerHTML = dotsHtml;
+    },
+
+    goToStore: function(index) {
+        if (index < 0 || index >= this.storeKeys.length) return;
+        this.currentStoreIndex = index;
+
+        const slider = document.getElementById('pickup-list-container');
+        if (slider) {
+            slider.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        }
+
+        this._snapToCurrentStore();
+    },
+
     renderContent: function() {
         const listContainer = document.getElementById('pickup-list-container');
-        if (!listContainer) return;
+        const wrapper = document.getElementById('pickup-swipe-wrapper');
+        if (!listContainer || !wrapper) return;
 
         // Calculate progress
         const total = this.tripPackages.length;
@@ -106,20 +268,39 @@ const Pickup = {
         const storeMap = {};
         stores.forEach(s => storeMap[s.kode_toko] = s);
 
+        // Build store keys array for navigation
+        this.storeKeys = Object.keys(grouped);
+        
+        // Clamp currentStoreIndex
+        if (this.currentStoreIndex >= this.storeKeys.length) {
+            this.currentStoreIndex = Math.max(0, this.storeKeys.length - 1);
+        }
+
+        const wrapperWidth = wrapper.offsetWidth;
+
         let html = '';
 
         for (const [storeId, storePkgs] of Object.entries(grouped)) {
             const storeName = storeMap[storeId] ? storeMap[storeId].nama_toko : 'Toko Tidak Diketahui';
+
+            // Calculate per-store progress
+            const storePickedUp = storePkgs.filter(p => p.status === 'picked_up').length;
+            const storeTotal = storePkgs.length;
+            const storeProgressPct = storeTotal === 0 ? 0 : Math.round((storePickedUp / storeTotal) * 100);
             
             html += `
-                <div class="card glassmorphism" style="margin-bottom: 0; padding: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px dashed var(--color-surface-2); padding-bottom: 0.5rem;">
-                        <h3 style="font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; color: var(--color-primary);">
-                            🏪 ${storeName}
-                        </h3>
-                        <span class="badge" style="background-color: var(--color-surface-2); color: var(--color-text-muted);">${storePkgs.length} paket</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="pickup-store-slide" style="flex: 0 0 ${wrapperWidth}px; width: ${wrapperWidth}px; padding: 0 0.25rem; overflow-y: auto;">
+                    <div class="card glassmorphism" style="margin-bottom: 0; padding: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px dashed var(--color-surface-2); padding-bottom: 0.5rem;">
+                            <h3 style="font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 0.5rem; color: var(--color-primary);">
+                                🏪 ${window.Utils.escapeHtml(storeName)}
+                            </h3>
+                            <span class="badge" style="background-color: var(--color-surface-2); color: var(--color-text-muted);">${storePickedUp}/${storeTotal} paket</span>
+                        </div>
+                        <div style="width: 100%; background-color: var(--color-surface-2); border-radius: 4px; height: 4px; overflow: hidden; margin-bottom: 1rem;">
+                            <div style="height: 100%; width: ${storeProgressPct}%; background-color: ${storeProgressPct === 100 ? 'var(--color-success)' : 'var(--color-primary)'}; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
             `;
 
             storePkgs.forEach(p => {
@@ -166,10 +347,27 @@ const Pickup = {
                 `;
             });
 
-            html += `</div></div>`;
+            html += `</div></div></div>`;
         }
 
         listContainer.innerHTML = html;
+
+        // Snap to current store position (no animation during render)
+        const slider = document.getElementById('pickup-list-container');
+        if (slider) {
+            slider.style.transition = 'none';
+            const offset = -this.currentStoreIndex * wrapperWidth;
+            slider.style.transform = `translateX(${offset}px)`;
+            // Re-enable transition after paint
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    slider.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                });
+            });
+        }
+
+        // Update store nav
+        this._updateStoreNav();
 
         // Generate barcodes
         if (window.Barcode) {
@@ -271,6 +469,12 @@ const Pickup = {
         const pkg = this.tripPackages.find(p => p.nomor_awb === awb);
         if (pkg) {
             if (pkg.status !== 'picked_up') {
+                // Auto-navigate to the store that contains this package
+                const storeId = pkg.store_id || 'unknown';
+                const storeIdx = this.storeKeys.indexOf(storeId);
+                if (storeIdx !== -1 && storeIdx !== this.currentStoreIndex) {
+                    this.goToStore(storeIdx);
+                }
                 this.handlePickedUp(pkg.id);
             } else {
                 window.Utils.showToast('Paket ini sudah diambil', 'warning');
@@ -281,13 +485,33 @@ const Pickup = {
     },
 
     handleCompleteTrip: function() {
+        // Complete the current trip
         if (this.currentTripId) {
             window.DB.completeTrip(this.currentTripId);
         }
+
+        // Also complete any other orphaned active trips to prevent
+        // the Trip menu from redirecting back to pickup mode
+        const allTrips = window.DB.getAllTrips();
+        allTrips.forEach(function(t) {
+            if (t.status === 'active') {
+                window.DB.completeTrip(t.id);
+            }
+        });
+
         if (window.Barcode) window.Barcode.stopScanner();
-        this.renderedTripId = null;
-        window.Utils.showToast('Trip Selesai!', 'success');
+
         if (window.AuditLog) window.AuditLog.log('COMPLETE_TRIP', 'trip', { trip_id: this.currentTripId, packages: this.tripPackages.length });
+
+        // Clear all pickup state
+        this.renderedTripId = null;
+        this.currentTripId = null;
+        this.tripPackages = [];
+        this.skippedPackages.clear();
+        this.currentStoreIndex = 0;
+        this.storeKeys = [];
+
+        window.Utils.showToast('Trip Selesai!', 'success');
         window.location.hash = '#dashboard';
     }
 };
