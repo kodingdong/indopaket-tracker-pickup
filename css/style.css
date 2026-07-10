@@ -464,3 +464,13 @@ body {
     -webkit-overflow-scrolling: touch;
     padding-bottom: 1rem;
 }
+
+/* Scanner overlay controls */
+#pickup-scanner-container {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+#scanner-close-btn:active {
+    background: rgba(0, 0, 0, 0.85) !important;
+    transform: scale(0.9);
+}

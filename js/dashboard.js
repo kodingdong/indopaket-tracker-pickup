@@ -385,7 +385,9 @@ const Dashboard = {
     toggleBulkMode: function() {
         this.bulkMode = !this.bulkMode;
         if (!this.bulkMode) this.selectedPackages.clear();
+        var scrollY = window.scrollY;
         this.render();
+        window.scrollTo(0, scrollY);
     },
 
     toggleSelect: function(id) {
@@ -394,7 +396,37 @@ const Dashboard = {
         } else {
             this.selectedPackages.add(id);
         }
-        this.render();
+        var scrollY = window.scrollY;
+        this._updateBulkBar();
+        this.renderPackageList();
+        window.scrollTo(0, scrollY);
+    },
+
+    _updateBulkBar: function() {
+        // Find or create bulk action bar
+        var existingBar = document.getElementById('dashboard-bulk-bar');
+        if (this.bulkMode && this.selectedPackages.size > 0) {
+            var barHtml = '<div class="card glassmorphism" style="position: sticky; top: 10px; z-index: 90; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--color-primary);">' +
+                '<div><strong>' + this.selectedPackages.size + '</strong> paket</div>' +
+                '<div style="display: flex; gap: 0.5rem;">' +
+                    '<button class="btn btn-primary" style="background-color: var(--color-success); padding: 0.5rem 1rem; width: auto;" onclick="Dashboard.bulkAction(\'pickup\')">Ambil</button>' +
+                    '<button class="btn badge-danger" style="border: none; padding: 0.5rem 1rem; width: auto;" onclick="Dashboard.bulkAction(\'delete\')">Hapus</button>' +
+                '</div>' +
+            '</div>';
+            if (existingBar) {
+                existingBar.innerHTML = barHtml;
+            } else {
+                var container = document.getElementById('dashboard-package-list');
+                if (container) {
+                    var barDiv = document.createElement('div');
+                    barDiv.id = 'dashboard-bulk-bar';
+                    barDiv.innerHTML = barHtml;
+                    container.parentNode.insertBefore(barDiv, container);
+                }
+            }
+        } else if (existingBar) {
+            existingBar.remove();
+        }
     },
 
     toggleBlur: function(containerElement) {

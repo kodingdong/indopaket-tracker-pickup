@@ -101,8 +101,14 @@ const App = {
                 window.Dashboard.render();
             } else if (basePath === '#stores' && window.Store) {
                 window.Store.render();
-            } else if (basePath === '#add' && window.Package) {
-                window.Package.renderForm(queryParams.get('edit'));
+            } else if (basePath === '#add') {
+                if (queryParams.get('edit') && window.Package) {
+                    window.Package.renderForm(queryParams.get('edit'));
+                } else if (window.OCR) {
+                    window.OCR.renderUpload();
+                } else if (window.Package) {
+                    window.Package.renderForm();
+                }
             } else if (basePath === '#package-detail' && window.Package) {
                 window.Package.renderDetail(queryParams.get('id'));
             } else if (basePath === '#trip' && window.Trip) {

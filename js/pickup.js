@@ -435,19 +435,88 @@ const Pickup = {
         
         if (container.style.display === 'none') {
             container.style.display = 'block';
+            container.style.position = 'relative';
             btn.innerHTML = 'Tutup Scanner';
+
+            // Add close button overlay
+            if (!document.getElementById('scanner-close-btn')) {
+                const closeBtn = document.createElement('button');
+                closeBtn.id = 'scanner-close-btn';
+                closeBtn.innerHTML = '✕';
+                closeBtn.style.cssText = 'position:absolute;top:8px;right:8px;z-index:20;width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,0.6);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background 0.2s;';
+                closeBtn.onclick = function(e) { e.stopPropagation(); Pickup.closeScanner(); };
+                container.appendChild(closeBtn);
+            }
+
+            // Bind swipe-up-to-close on scanner
+            this._bindScannerSwipe(container);
+
             if (window.Barcode) {
                 window.Barcode.startScanner('pickup-scanner-container', (awb) => {
                     this.handleScanResult(awb);
                 });
             }
         } else {
-            container.style.display = 'none';
-            btn.innerHTML = '📷 Scan';
-            if (window.Barcode) {
-                window.Barcode.stopScanner();
-            }
+            this.closeScanner();
         }
+    },
+
+    closeScanner: function() {
+        const container = document.getElementById('pickup-scanner-container');
+        const btn = document.getElementById('btn-toggle-scanner');
+        if (container) {
+            container.style.display = 'none';
+            // Remove close button
+            const closeBtn = document.getElementById('scanner-close-btn');
+            if (closeBtn) closeBtn.remove();
+        }
+        if (btn) btn.innerHTML = '📷 Scan';
+        if (window.Barcode) {
+            window.Barcode.stopScanner();
+        }
+    },
+
+    _bindScannerSwipe: function(container) {
+        var self = this;
+        var startY = 0;
+        var currentY = 0;
+        var isSwiping = false;
+
+        container._scannerTouchStart = function(e) {
+            startY = e.touches[0].clientY;
+            currentY = startY;
+            isSwiping = false;
+        };
+        container._scannerTouchMove = function(e) {
+            currentY = e.touches[0].clientY;
+            var diffY = startY - currentY; // positive = swipe up
+            if (diffY > 20) {
+                isSwiping = true;
+                // Visual feedback: shrink the container slightly
+                var scale = Math.max(0.85, 1 - (diffY / 400));
+                var opacity = Math.max(0.4, 1 - (diffY / 300));
+                container.style.transform = 'translateY(' + (-diffY * 0.3) + 'px) scale(' + scale + ')';
+                container.style.opacity = opacity;
+            }
+        };
+        container._scannerTouchEnd = function(e) {
+            container.style.transform = '';
+            container.style.opacity = '';
+            var diffY = startY - currentY;
+            if (isSwiping && diffY > 60) {
+                self.closeScanner();
+            }
+            isSwiping = false;
+        };
+
+        // Remove old listeners if any
+        container.removeEventListener('touchstart', container._scannerTouchStart);
+        container.removeEventListener('touchmove', container._scannerTouchMove);
+        container.removeEventListener('touchend', container._scannerTouchEnd);
+
+        container.addEventListener('touchstart', container._scannerTouchStart, { passive: true });
+        container.addEventListener('touchmove', container._scannerTouchMove, { passive: true });
+        container.addEventListener('touchend', container._scannerTouchEnd, { passive: true });
     },
 
     handleScanResult: function(awb) {
