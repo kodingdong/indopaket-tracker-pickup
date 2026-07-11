@@ -88,7 +88,7 @@ Setelah trip dimulai, Anda masuk ke **Mode Pickup**:
 2. Arahkan kamera ke barcode AWB pada paket
 3. Jika AWB cocok → otomatis tandai "Diambil"
 4. Jika tidak cocok → muncul pesan error
-5. Tap **"Tutup Scanner"** untuk menutup kamera
+5. Tap **"Tutup Scanner"**, ketuk tombol **✕** (silang) di pojok kanan atas, atau **swipe ke atas** (geser ke atas) pada area kamera untuk menutup scanner.
 
 #### Menyelesaikan Trip
 
@@ -135,7 +135,7 @@ Scanner menggunakan kamera belakang HP untuk membaca barcode. Tersedia di **Mode
 Fitur ini menggunakan **Tesseract.js** untuk mengekstrak teks dari foto/screenshot resi paket.
 
 **Langkah:**
-1. Tap **"Tambah"** → pilih tab **"Upload OCR"**
+1. Tap **"Tambah"** di navigasi bawah. Tab **"Upload OCR"** akan terbuka secara default.
 2. Pilih **Toko Indomaret** dari dropdown
 3. Pilih gambar:
    - Tap area upload untuk memilih file, atau
@@ -379,6 +379,7 @@ Nama,AWB,PIN,Toko,Status,Tanggal Masuk,Deadline,Urgent
 | Aplikasi tidak bisa dibuka offline | Buka aplikasi sekali saat online, tunggu semua asset ter-cache. Periksa service worker di DevTools → Application → Service Workers. |
 | Tampilan tidak update setelah deploy baru | Service worker menggunakan cache-first. Buka DevTools → Application → Service Workers → klik "Update" atau "Unregister", lalu refresh. |
 | Ikon tidak muncul di home screen | Pastikan folder `icons/` berisi file `icon-192x192.png` dan `icon-512x512.png`. |
+| Aplikasi terputar (Landscape) | Sejak v1.2.5, aplikasi dikunci ke mode **Portrait** melalui manifest. Jika masih terputar, pastikan auto-rotate HP Anda nonaktif atau refresh PWA Anda. |
 
 ### 13.2 Data & LocalStorage
 

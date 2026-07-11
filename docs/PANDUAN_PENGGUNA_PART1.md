@@ -1,6 +1,6 @@
 # 📦 Panduan Lengkap — Paket Pickup Tracker PWA
 
-> Versi: 1.0 | Terakhir diperbarui: 19 Juni 2026
+> Versi: 1.2.5 | Terakhir diperbarui: 11 Juli 2026
 
 ---
 
@@ -98,6 +98,7 @@ PWA bisa diinstall di HP maupun laptop tanpa perlu app store.
    - Pilih **"Install app"** atau **"Add to Home screen"**
 4. Ketik nama (default: "Paket Pickup Tracker") → tap **Add**
 5. Ikon aplikasi akan muncul di home screen
+6. **(Baru di v1.2.5)** Anda bisa menekan tahan (long-press) ikon di home screen untuk menggunakan **App Shortcuts** (Mulai Trip & Scan OCR).
 
 ### 2.2 iPhone/iPad (Safari)
 
@@ -186,7 +187,7 @@ Setiap kartu toko menampilkan:
 ### 5.1 Input Manual
 
 1. Tap tab **"Tambah"** di navigasi bawah (atau tombol **+** di Dashboard)
-2. Pastikan tab **"Manual"** aktif
+2. Tab **"Upload OCR"** akan terbuka secara default. Tap tab **"Manual"** jika ingin input manual.
 3. Isi form:
 
 | Field | Wajib? | Keterangan |

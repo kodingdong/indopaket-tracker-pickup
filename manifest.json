@@ -2,25 +2,36 @@
     "name": "Paket Pickup Tracker",
     "short_name": "PaketTracker",
     "description": "Sistem Tracking Paket & Manajemen Pickup",
+    "id": "/index.html",
     "start_url": "./index.html",
+    "scope": "./",
     "display": "standalone",
+    "orientation": "portrait",
+    "dir": "ltr",
+    "lang": "id",
     "background_color": "#0f0f1a",
     "theme_color": "#6c63ff",
+    "categories": ["business", "productivity"],
     "icons": [
         {
             "src": "icons/icon-192x192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "icons/icon-512x512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ],
-    "scope": "./",
-    "orientation": "portrait",
-    "lang": "id",
     "shortcuts": [
         {
             "name": "Scan OCR",
