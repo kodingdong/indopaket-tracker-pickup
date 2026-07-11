@@ -17,5 +17,24 @@
             "sizes": "512x512",
             "type": "image/png"
         }
+    ],
+    "scope": "./",
+    "orientation": "portrait",
+    "lang": "id",
+    "shortcuts": [
+        {
+            "name": "Scan OCR",
+            "short_name": "OCR",
+            "description": "Upload resi untuk deteksi teks",
+            "url": "./index.html#add",
+            "icons": [{ "src": "icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Mulai Trip",
+            "short_name": "Trip",
+            "description": "Buka mode trip scanner",
+            "url": "./index.html#trip",
+            "icons": [{ "src": "icons/icon-192x192.png", "sizes": "192x192" }]
+        }
     ]
 }
