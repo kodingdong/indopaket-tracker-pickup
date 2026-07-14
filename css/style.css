@@ -465,6 +465,28 @@ body {
     padding-bottom: 1rem;
 }
 
+/* History View */
+.history-summary-card {
+    transition: transform 0.15s ease, border-color 0.2s ease;
+}
+
+.history-summary-card:active {
+    transform: scale(0.95);
+}
+
+.history-item {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.history-item:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 12px rgba(108, 99, 255, 0.15);
+}
+
+.history-date-group {
+    animation: fadeIn 0.3s ease-in;
+}
+
 /* Scanner overlay controls */
 #pickup-scanner-container {
     transition: transform 0.2s ease, opacity 0.2s ease;

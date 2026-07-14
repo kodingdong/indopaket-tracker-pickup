@@ -60,6 +60,7 @@ const App = {
             '#add': 'view-add',
             '#trip': 'view-trip',
             '#stats': 'view-stats',
+            '#history': 'view-history',
             '#stores': 'view-stores',
             '#package-detail': 'view-package-detail',
             '#pickup': 'view-pickup',
@@ -117,6 +118,8 @@ const App = {
                 window.Pickup.render(queryParams.get('trip_id'));
             } else if (basePath === '#stats' && window.Stats) {
                 window.Stats.render();
+            } else if (basePath === '#history' && window.History) {
+                window.History.render();
             } else if (basePath === '#settings' && window.Settings) {
                 window.Settings.render();
             } else if (basePath === '#admin' && window.Admin) {

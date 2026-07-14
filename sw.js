@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paket-v1.2.5';
+const CACHE_NAME = 'paket-v1.3.0';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -9,6 +9,7 @@ const ASSETS_TO_CACHE = [
     './js/package.js',
     './js/ocr.js',
     './js/stats.js',
+    './js/history.js',
     './js/trip.js',
     './js/pickup.js',
     './js/barcode.js',

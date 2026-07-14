@@ -19,7 +19,7 @@
 </head>
 <body>
     <header class="app-header">
-        <h2 style="margin: 0; font-size: 1.25rem;">Paket Pickup Tracker <span style="font-size:0.7rem; color:var(--color-primary);">v1.2.5</span></h2>
+        <h2 style="margin: 0; font-size: 1.25rem;">Paket Pickup Tracker <span style="font-size:0.7rem; color:var(--color-primary);">v1.3.0</span></h2>
         <div id="sync-indicator" class="sync-badge not-configured" onclick="App.navigate('settings')" title="Sync Status">☁️</div>
     </header>
 
@@ -45,6 +45,7 @@
             <!-- Trip content will be dynamically rendered here by js/trip.js -->
         </div>
         <div id="view-stats" class="view" style="display: none;"></div>
+        <div id="view-history" class="view" style="display: none;"></div>
         <div id="view-stores" class="view" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2>Daftar Toko</h2>
@@ -72,6 +73,9 @@
         </a>
         <a href="#trip" class="nav-item" data-target="view-trip">
             <span>Trip</span>
+        </a>
+        <a href="#history" class="nav-item" data-target="view-history">
+            <span>📋 Histori</span>
         </a>
         <a href="#stats" class="nav-item" data-target="view-stats">
             <span>Statistik</span>
@@ -111,6 +115,7 @@
     <script src="js/package.js"></script>
     <script src="js/ocr.js"></script>
     <script src="js/stats.js"></script>
+    <script src="js/history.js"></script>
     <script src="js/trip.js"></script>
     <script src="js/pickup.js"></script>
     <script src="js/barcode.js"></script>
