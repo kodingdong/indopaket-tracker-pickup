@@ -29,7 +29,7 @@ const History = {
 
         let html = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="font-size: 1.5rem; margin: 0;">📋 Histori</h2>
+                <h2 style="font-size: 1.5rem; margin: 0;">Histori</h2>
             </div>
 
             <!-- Summary Cards -->
