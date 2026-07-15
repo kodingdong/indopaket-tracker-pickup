@@ -322,15 +322,11 @@ const Pickup = {
                             ${isSkipped && !isPickedUp ? '<span class="badge badge-warning">Skipped</span>' : ''}
                         </div>
                         
-                        <div style="text-align: center; margin: 1rem 0;">
-                            <div style="font-size: 56px; font-weight: 800; letter-spacing: 2px; line-height: 1; ${isPickedUp ? 'text-decoration: line-through; color: var(--color-success);' : 'color: var(--color-text);'}">${window.Utils.escapeHtml(p.pin)}</div>
-                            <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.5rem;">AWB: ${window.Utils.escapeHtml(p.nomor_awb || '-')}</div>
+                        <div style="text-align: center; margin: 0.5rem 0;">
+                            <div style="font-size: 0.85rem; color: var(--color-text-muted); font-weight: 600;">AWB: ${window.Utils.escapeHtml(p.nomor_awb || '-')}</div>
                             <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: center; margin-top: 0.5rem; width: 100%; overflow: hidden;">
                                 <div style="background: white; padding: 0.5rem; border-radius: var(--radius); max-width: 100%; display: flex; justify-content: center;">
-                                    <canvas id="barcode-pickup-${p.id}" style="max-width: 100%; height: auto;"></canvas>
-                                </div>
-                                <div style="background: white; padding: 0.5rem; border-radius: var(--radius); max-width: 100%; display: flex; justify-content: center;">
-                                    <canvas id="barcode-pin-pickup-${p.id}" style="max-width: 100%; height: auto;"></canvas>
+                                    <canvas id="barcode-pin-pickup-${p.id}" style="max-width: 100%; height: 40px;"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -375,9 +371,6 @@ const Pickup = {
         if (window.Barcode) {
             setTimeout(() => {
                 this.tripPackages.forEach(p => {
-                    if (p.nomor_awb) {
-                        window.Barcode.generateBarcode(p.nomor_awb, `barcode-pickup-${p.id}`);
-                    }
                     if (p.pin) {
                         window.Barcode.generateBarcode(p.pin, `barcode-pin-pickup-${p.id}`);
                     }
