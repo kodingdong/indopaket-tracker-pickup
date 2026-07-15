@@ -3,15 +3,15 @@
 const Barcode = {
     scanner: null,
 
-    generateBarcode: function(awbNumber, canvasElementId) {
+    generateBarcode: function(awbNumber, canvasElementId, options) {
         if (!awbNumber || typeof JsBarcode === 'undefined') return;
         try {
-            JsBarcode("#" + canvasElementId, awbNumber, {
+            JsBarcode("#" + canvasElementId, awbNumber, Object.assign({
                 format: "CODE128",
                 width: 2,
                 height: 50,
                 displayValue: true
-            });
+            }, options || {}));
         } catch (e) {
             console.error("Gagal generate barcode", e);
         }

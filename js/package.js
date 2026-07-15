@@ -209,7 +209,7 @@ const Package = {
         }
 
         const store = window.DB.getStoreByKode(pkg.store_id);
-        const storeName = store ? store.nama_toko : 'Toko Tidak Diketahui';
+        const storeName = store ? `${store.nama_toko} (${store.kode_toko})` : (pkg.store_id || 'Toko Tidak Diketahui');
         
         const daysRemaining = window.Utils.daysUntilDeadline(pkg.deadline);
         const statusClass = pkg.status === 'picked_up' ? 'success' : pkg.status === 'returned' ? 'danger' : daysRemaining <= 1 || pkg.urgent ? 'urgent' : 'warning';
@@ -218,59 +218,64 @@ const Package = {
 
         const html = `
             <div class="card glassmorphism slideUp">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                    <div>
-                        <span class="badge badge-${statusClass}" style="margin-bottom: 0.5rem; display: inline-block;">${statusText}</span>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                    <div style="flex: 1; min-width: 0;">
+                        <span class="badge badge-${statusClass}" style="margin-bottom: 0.35rem; display: inline-block;">${statusText}</span>
                         ${pkg.urgent ? '<span class="badge badge-urgent" style="margin-left: 0.5rem; display: inline-block;">URGENT</span>' : ''}
-                        <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;">${window.Utils.escapeHtml(pkg.nama)}</h2>
-                        <p style="color: var(--color-text-muted); font-size: 0.875rem;">${window.Utils.escapeHtml(storeName)}</p>
+                        <h2 style="font-size: 1.3rem; margin-bottom: 0.15rem;">${window.Utils.escapeHtml(pkg.nama)}</h2>
+                        <p style="color: var(--color-text-muted); font-size: 0.8rem;">🏪 ${window.Utils.escapeHtml(storeName)}</p>
                     </div>
                 </div>
 
-                <div style="background-color: var(--color-surface-2); padding: 1.5rem; border-radius: var(--radius); text-align: center; margin-bottom: 1.5rem;">
-                    <p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">KODE PIN</p>
-                    <div style="font-size: 48px; font-weight: 700; letter-spacing: 4px; color: var(--color-primary);">${window.Utils.escapeHtml(pkg.pin)}</div>
-                    <div style="margin-top: 0.75rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block;">
-                        <canvas id="barcode-pin-detail-${pkg.id}" style="max-width: 100%; height: 40px;"></canvas>
+                <!-- Compact PIN + AWB Section -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <div style="background-color: var(--color-surface-2); padding: 0.75rem; border-radius: var(--radius); text-align: center;">
+                        <p style="color: var(--color-text-muted); font-size: 0.65rem; margin-bottom: 0.25rem; text-transform: uppercase;">Kode PIN</p>
+                        <div style="font-size: 1.25rem; font-weight: 700; letter-spacing: 2px; color: var(--color-primary); margin-bottom: 0.35rem;">${window.Utils.escapeHtml(pkg.pin)}</div>
+                        <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block;">
+                            <canvas id="barcode-pin-detail-${pkg.id}"></canvas>
+                        </div>
+                    </div>
+                    <div style="background-color: var(--color-surface-2); padding: 0.75rem; border-radius: var(--radius); text-align: center;">
+                        <p style="color: var(--color-text-muted); font-size: 0.65rem; margin-bottom: 0.25rem; text-transform: uppercase;">AWB</p>
+                        <div style="font-size: 0.7rem; font-weight: 600; color: var(--color-text); margin-bottom: 0.35rem; word-break: break-all;">${window.Utils.escapeHtml(pkg.nomor_awb || '-')}</div>
+                        ${pkg.nomor_awb ? `
+                        <div style="background: white; padding: 0.25rem; border-radius: 4px; display: inline-block; max-width: 100%; overflow: hidden;">
+                            <canvas id="barcode-detail-${pkg.id}"></canvas>
+                        </div>` : ''}
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                    <div style="grid-column: span 2; text-align: center; background: white; padding: 0.5rem; border-radius: var(--radius); overflow: hidden;">
-                        <canvas id="barcode-detail-${pkg.id}" style="max-width: 100%; height: 50px;"></canvas>
+                <!-- Info Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; margin-bottom: 0.75rem; padding: 0.75rem; background: var(--color-surface-2); border-radius: var(--radius);">
+                    <div>
+                        <p style="color: var(--color-text-muted); font-size: 0.65rem; text-transform: uppercase;">Invoice</p>
+                        <p style="font-weight: 500; font-size: 0.85rem;">${window.Utils.escapeHtml(pkg.invoice || '-')}</p>
                     </div>
                     <div>
-                        <p style="color: var(--color-text-muted); font-size: 0.75rem;">NO. RESI / AWB</p>
-                        <p style="font-weight: 500;">${window.Utils.escapeHtml(pkg.nomor_awb || '-')}</p>
+                        <p style="color: var(--color-text-muted); font-size: 0.65rem; text-transform: uppercase;">Tanggal Masuk</p>
+                        <p style="font-weight: 500; font-size: 0.85rem;">${window.Utils.formatDate(pkg.tanggal_masuk)}</p>
                     </div>
                     <div>
-                        <p style="color: var(--color-text-muted); font-size: 0.75rem;">INVOICE</p>
-                        <p style="font-weight: 500;">${window.Utils.escapeHtml(pkg.invoice || '-')}</p>
-                    </div>
-                    <div>
-                        <p style="color: var(--color-text-muted); font-size: 0.75rem;">TANGGAL MASUK</p>
-                        <p style="font-weight: 500;">${window.Utils.formatDate(pkg.tanggal_masuk)}</p>
-                    </div>
-                    <div>
-                        <p style="color: var(--color-text-muted); font-size: 0.75rem;">BATAS PENGAMBILAN</p>
-                        <p style="font-weight: 500; color: ${daysRemaining < 0 ? 'var(--color-urgent)' : 'inherit'};">${window.Utils.formatDate(pkg.deadline)}</p>
+                        <p style="color: var(--color-text-muted); font-size: 0.65rem; text-transform: uppercase;">Batas Pengambilan</p>
+                        <p style="font-weight: 500; font-size: 0.85rem; color: ${daysRemaining < 0 ? 'var(--color-urgent)' : 'inherit'};">${window.Utils.formatDate(pkg.deadline)}</p>
                     </div>
                     ${pkg.tanggal_pickup ? `
-                    <div style="grid-column: span 2; padding-top: 0.5rem; border-top: 1px dashed var(--color-surface-2);">
-                        <p style="color: var(--color-text-muted); font-size: 0.75rem;">DIAMBIL PADA (SCAN TRIP)</p>
-                        <p style="font-weight: 600; color: var(--color-success);">${window.Utils.formatDate(pkg.tanggal_pickup)} - ${new Date(pkg.tanggal_pickup).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</p>
+                    <div>
+                        <p style="color: var(--color-text-muted); font-size: 0.65rem; text-transform: uppercase;">Diambil (Scan Trip)</p>
+                        <p style="font-weight: 600; font-size: 0.85rem; color: var(--color-success);">${window.Utils.formatDate(pkg.tanggal_pickup)} ${new Date(pkg.tanggal_pickup).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                     ` : ''}
                 </div>
 
                 ${pkg.catatan ? `
-                <div style="margin-bottom: 1.5rem;">
-                    <p style="color: var(--color-text-muted); font-size: 0.75rem;">CATATAN</p>
-                    <p style="font-size: 0.875rem; line-height: 1.5; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 8px;">${window.Utils.escapeHtml(pkg.catatan)}</p>
+                <div style="margin-bottom: 0.75rem;">
+                    <p style="color: var(--color-text-muted); font-size: 0.65rem; text-transform: uppercase; margin-bottom: 0.25rem;">Catatan</p>
+                    <p style="font-size: 0.8rem; line-height: 1.4; background: rgba(0,0,0,0.2); padding: 0.5rem 0.75rem; border-radius: 8px;">${window.Utils.escapeHtml(pkg.catatan)}</p>
                 </div>
                 ` : ''}
 
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                     ${pkg.status === 'pending' ? `
                     <button class="btn btn-primary" style="background-color: var(--color-success);" onclick="Package.handleMarkPickedUp('${pkg.id}')">Tandai Sudah Diambil</button>
                     <div style="display: flex; gap: 0.5rem;">
@@ -284,10 +289,15 @@ const Package = {
         `;
         
         container.innerHTML = html;
-        if (pkg.nomor_awb && window.Barcode) {
+        if (window.Barcode) {
             setTimeout(() => {
-                window.Barcode.generateBarcode(pkg.nomor_awb, `barcode-detail-${pkg.id}`);
-                if (pkg.pin) window.Barcode.generateBarcode(pkg.pin, `barcode-pin-detail-${pkg.id}`);
+                const smallOpts = { width: 1, height: 28, fontSize: 10, margin: 2 };
+                if (pkg.nomor_awb) {
+                    window.Barcode.generateBarcode(pkg.nomor_awb, `barcode-detail-${pkg.id}`, smallOpts);
+                }
+                if (pkg.pin) {
+                    window.Barcode.generateBarcode(pkg.pin, `barcode-pin-detail-${pkg.id}`, smallOpts);
+                }
             }, 50);
         }
     },
