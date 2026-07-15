@@ -245,7 +245,7 @@ const History = {
 
             pkgs.forEach(p => {
                 const store = storeMap[p.store_id];
-                const storeName = store ? store.nama_toko : 'Toko Tidak Diketahui';
+                const storeName = store ? `${store.nama_toko} (${store.kode_toko})` : (p.store_id || 'Toko Tidak Diketahui');
                 
                 let statusClass, statusText, statusIcon;
                 if (p.status === 'picked_up') {

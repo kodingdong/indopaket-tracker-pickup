@@ -231,13 +231,13 @@ const Package = {
                     <p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">KODE PIN</p>
                     <div style="font-size: 48px; font-weight: 700; letter-spacing: 4px; color: var(--color-primary);">${window.Utils.escapeHtml(pkg.pin)}</div>
                     <div style="margin-top: 0.75rem; background: white; padding: 0.5rem; border-radius: var(--radius); display: inline-block;">
-                        <canvas id="barcode-pin-detail-${pkg.id}"></canvas>
+                        <canvas id="barcode-pin-detail-${pkg.id}" style="max-width: 100%; height: 40px;"></canvas>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                     <div style="grid-column: span 2; text-align: center; background: white; padding: 0.5rem; border-radius: var(--radius); overflow: hidden;">
-                        <canvas id="barcode-detail-${pkg.id}"></canvas>
+                        <canvas id="barcode-detail-${pkg.id}" style="max-width: 100%; height: 50px;"></canvas>
                     </div>
                     <div>
                         <p style="color: var(--color-text-muted); font-size: 0.75rem;">NO. RESI / AWB</p>
@@ -255,6 +255,12 @@ const Package = {
                         <p style="color: var(--color-text-muted); font-size: 0.75rem;">BATAS PENGAMBILAN</p>
                         <p style="font-weight: 500; color: ${daysRemaining < 0 ? 'var(--color-urgent)' : 'inherit'};">${window.Utils.formatDate(pkg.deadline)}</p>
                     </div>
+                    ${pkg.tanggal_pickup ? `
+                    <div style="grid-column: span 2; padding-top: 0.5rem; border-top: 1px dashed var(--color-surface-2);">
+                        <p style="color: var(--color-text-muted); font-size: 0.75rem;">DIAMBIL PADA (SCAN TRIP)</p>
+                        <p style="font-weight: 600; color: var(--color-success);">${window.Utils.formatDate(pkg.tanggal_pickup)} - ${new Date(pkg.tanggal_pickup).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                    ` : ''}
                 </div>
 
                 ${pkg.catatan ? `
